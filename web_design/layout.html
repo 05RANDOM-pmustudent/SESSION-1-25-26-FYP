@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AwareLink Website Analysis Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --background: #f0f4f8;
+            --surface: #ffffff;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            
+            /* Result Colors */
+            --legitimate-bg: #e0fbe0;
+            --legitimate-text: #166534;
+            --suspicious-bg: #fffbe0;
+            --suspicious-text: #a16207;
+            --malicious-bg: #ffe0e0;
+            --malicious-text: #be123c;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--background);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--surface);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem 0;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 768px; /* More focused content area */
+            margin: 40px auto;
+            padding: 0 20px;
+            flex-grow: 1;
+        }
+
+        .analyzer-card {
+            background-color: var(--surface);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .form-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-container input, .form-container textarea {
+            padding: 12px 16px;
+            font-size: 1rem;
+            flex-grow: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: box-shadow 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .form-container input:focus, .form-container textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            border-color: var(--primary);
+        }
+
+        .form-container button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            background-color: var(--primary);
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+        
+        .form-container button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            margin-top: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .result-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-verdict {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .result-verdict h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .result-verdict p {
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        /* Verdict specific styles */
+        .verdict-legitimate { background-color: var(--legitimate-bg); color: var(--legitimate-text); }
+        .verdict-suspicious { background-color: var(--suspicious-bg); color: var(--suspicious-text); }
+        .verdict-malicious { background-color: var(--malicious-bg); color: var(--malicious-text); }
+
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .detail-box {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .detail-box h4 {
+            margin: 0 0 10px 0;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .detail-box p {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        #warnings-list ul {
+            list-style: none;
+            padding: 0; margin: 0;
+        }
+        #warnings-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        #warnings-list li:last-child {
+             border-bottom: none;
+        }
+        #warnings-list .fa-triangle-exclamation {
+            color: var(--suspicious-text);
+        }
+
+        .warning-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .warning-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .warning-explanation {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .news-analysis-container .detail-box p {
+            font-size: 1.1rem;
+        }
+
+        .news-analysis-container .reasoning {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--text-secondary);
+            margin-top: auto; /* Pushes footer to bottom */
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>AwareLink Website Analysis Tool</h1>
+    </header>
+
+    <div class="container">
+        <div class="analyzer-card">
+            <h2>Website Security Check</h2>
+            <div class="form-container">
+                <input type="text" id="url" placeholder="Enter URL for analysis (e.g., example.com)" required>
+                <button id="analyzeButton">
+                    <span id="button-text">Analyze</span>
+                    <span id="loader" class="loader" style="display: none;"></span>
+                </button>
+            </div>
+            
+            <div id="result-placeholder" style="text-align:center; margin-top: 30px; color: var(--text-secondary);">
+                <p>Enter a URL above to check its safety.</p>
+            </div>
+
+            <div class="result-container" id="result">
+                <!-- Results will be injected here -->
+            </div>
+        </div>
+
+        <div class="analyzer-card">
+            <h2>Fake News & Bias Detector</h2>
+            <div class="form-container" style="flex-direction: column;">
+                <textarea id="news-text" rows="8" placeholder="Paste news article text here..."></textarea>
+                <button id="analyzeNewsButton" style="align-self: flex-end;">
+                    <span id="news-button-text">Analyze News</span>
+                    <span id="news-loader" class="loader" style="display: none;"></span>
+                </button>
+            </div>
+            
+            <div id="news-result-placeholder" style="text-align:center; margin-top: 30px; color: var(--text-secondary);">
+                <p>Paste an article above to check for fake news and bias.</p>
+            </div>
+
+            <div class="result-container" id="news-result">
+                <!-- News analysis results will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Website Analysis Tool | Powered by Flask</p>
+    </footer>
+
+    <script>
+        const analyzeButton = document.getElementById("analyzeButton");
+        const buttonText = document.getElementById("button-text");
+        const loader = document.getElementById("loader");
+        const urlInput = document.getElementById("url");
+        const resultContainer = document.getElementById("result");
+        const resultPlaceholder = document.getElementById("result-placeholder");
+
+        const analyzeNewsButton = document.getElementById("analyzeNewsButton");
+        const newsButtonText = document.getElementById("news-button-text");
+        const newsLoader = document.getElementById("news-loader");
+        const newsTextInput = document.getElementById("news-text");
+        const newsResultContainer = document.getElementById("news-result");
+        const newsResultPlaceholder = document.getElementById("news-result-placeholder");
+
+
+        analyzeButton.addEventListener("click", handleAnalysis);
+        urlInput.addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                handleAnalysis();
+            }
+        });
+
+        analyzeNewsButton.addEventListener("click", handleNewsAnalysis);
+        
+        async function handleAnalysis() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert("Please enter a URL.");
+                return;
+            }
+
+            // --- Start Loading State ---
+            buttonText.textContent = "Analyzing...";
+            loader.style.display = 'block';
+            analyzeButton.disabled = true;
+            resultPlaceholder.style.display = 'none';
+            resultContainer.classList.remove('visible');
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Analysis failed with status ' + response.status);
+                }
+
+                const result = await response.json();
+                displayResult(result);
+
+            } catch (error) {
+                displayError(error.message);
+            } finally {
+                // --- End Loading State ---
+                buttonText.textContent = 'Analyze';
+                loader.style.display = 'none';
+                analyzeButton.disabled = false;
+            }
+        }
+
+        async function handleNewsAnalysis() {
+            const text = newsTextInput.value.trim();
+            if (!text) {
+                alert("Please paste some news text to analyze.");
+                return;
+            }
+
+            // --- Start Loading State ---
+            newsButtonText.textContent = "Analyzing...";
+            newsLoader.style.display = 'block';
+            analyzeNewsButton.disabled = true;
+            newsResultPlaceholder.style.display = 'none';
+            newsResultContainer.classList.remove('visible');
+
+            try {
+                const response = await fetch('/analyze-news', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'News analysis failed with status ' + response.status);
+                }
+
+                const result = await response.json();
+                displayNewsResult(result);
+
+            } catch (error) {
+                displayNewsError(error.message);
+            } finally {
+                // --- End Loading State ---
+                newsButtonText.textContent = 'Analyze News';
+                newsLoader.style.display = 'none';
+                analyzeNewsButton.disabled = false;
+            }
+        }
+
+        function displayError(errorMessage) {
+            resultContainer.innerHTML = `
+                <div class="result-verdict verdict-malicious">
+                     <h2><i class="fa-solid fa-circle-xmark"></i> Analysis Error</h2>
+                     <p>${errorMessage}</p>
+                </div>`;
+            resultContainer.classList.add('visible');
+        }
+
+        function displayNewsError(errorMessage) {
+            newsResultContainer.innerHTML = `
+                <div class="result-verdict verdict-malicious">
+                     <h2><i class="fa-solid fa-circle-xmark"></i> Analysis Error</h2>
+                     <p>${errorMessage}</p>
+                </div>`;
+            newsResultContainer.classList.add('visible');
+        }
+
+        // NEW JAVASCRIPT TRANSLATOR FUNCTION
+        function translateWarning(warning) {
+            // Default in case no match is found
+            let translation = {
+                title: "General Warning",
+                explanation: warning
+            };
+
+            if (warning.startsWith("Uses IP address")) {
+                translation = {
+                    title: "Uses a Direct IP Address",
+                    explanation: "Legitimate websites use a domain name (like google.com), not a numerical IP address. This is a major red flag for phishing."
+                };
+            } else if (warning.startsWith("Contains '@' symbol")) {
+                translation = {
+                    title: "Contains '@' Symbol",
+                    explanation: "This may be an attempt to embed credentials in the URL, a common phishing trick to steal login information."
+                };
+            } else if (warning.startsWith("Excessive hyphens")) {
+                translation = {
+                    title: "Too Many Hyphens in Address",
+                    explanation: "Scammers often use hyphens to mimic legitimate sites (e.g., 'your-bank-online-security.com'). Too many is a sign of deception."
+                };
+            } else if (warning.startsWith("Suspicious TLD")) {
+                const tld = warning.split(':')[1] ? warning.split(':')[1].trim() : '';
+                translation = {
+                    title: "Uncommon or Risky Domain Ending",
+                    explanation: `The website uses the '${tld}' domain ending, which is cheap and popular with scammers for creating throwaway websites.`
+                };
+            } else if (warning.startsWith("Excessively long domain name")) {
+                translation = {
+                    title: "Excessively Long Domain Name",
+                    explanation: "Very long domain names are often used to confuse users and hide malicious intent."
+                };
+            } else if (warning.startsWith("Too many subdomains")) {
+                translation = {
+                    title: "Too Many Subdomains",
+                    explanation: "Excessive subdomains can be used to deceive users into thinking it's a legitimate nested site."
+                };
+            } else if (warning.startsWith("Contains sensitive/trigger keywords")) {
+                translation = {
+                    title: "Suspicious Keywords in Domain",
+                    explanation: "Words like 'login', 'secure', or 'banking' in the domain may indicate an attempt to impersonate trusted services."
+                };
+            } else if (warning.startsWith("Suspicious subdomain usage")) {
+                translation = {
+                    title: "Suspicious Subdomain Pattern",
+                    explanation: "This matches known scam patterns, such as fake government or subsidy sites."
+                };
+            } else if (warning.startsWith("New domain")) {
+                const age = warning.match(/\d+/) ? warning.match(/\d+/)[0] : 'a few';
+                translation = {
+                    title: "Very New Website",
+                    explanation: `This website was registered only ${age} days ago. Scammers create new sites constantly, so a new domain is a sign of higher risk.`
+                };
+            } else if (warning.startsWith("Invalid or expiring SSL")) {
+                translation = {
+                    title: "Invalid or Expiring SSL Certificate",
+                    explanation: "The site's security certificate is invalid or about to expire, which can expose your data to interception."
+                };
+            } else if (warning.startsWith("No HTTPS")) {
+                translation = {
+                    title: "Insecure Connection (No HTTPS)",
+                    explanation: "This site does not use basic encryption. Any information you send (passwords, credit cards) can be easily stolen."
+                };
+            } else if (warning.startsWith("Missing security headers")) {
+                translation = {
+                    title: "Missing Modern Security Features",
+                    explanation: "The website is missing standard security features that protect visitors from common attacks like clickjacking."
+                };
+            } else if (warning.startsWith("Excessive hidden elements")) {
+                translation = {
+                    title: "Excessive Hidden Elements",
+                    explanation: "Too many hidden parts on the page could be hiding malicious code or deceptive content."
+                };
+            } else if (warning.startsWith("Multiple iframes")) {
+                translation = {
+                    title: "Multiple Iframes Detected",
+                    explanation: "Excessive iframes can be used to embed harmful content from other sites without your knowledge."
+                };
+            } else if (warning.startsWith("Could not determine domain age")) {
+                translation = {
+                    title: "Unknown Domain Age",
+                    explanation: "We couldn't retrieve the registration date, which makes it harder to assess trustworthiness."
+                };
+            } else if (warning === "Looks normal") {
+                translation = {
+                    title: "URL Structure Normal",
+                    explanation: "The website's address doesn't show any common signs of deception."
+                };
+            }
+            
+            return translation;
+        }
+
+        function displayResult(result) {
+            let verdictClass = '';
+            let verdictIcon = '';
+            let verdictText = result.flag.charAt(0).toUpperCase() + result.flag.slice(1);
+            
+            if (result.flag === 'legitimate') {
+                verdictClass = 'verdict-legitimate';
+                verdictIcon = '<i class="fa-solid fa-shield-halved"></i>';
+            } else if (result.flag === 'suspicious') {
+                verdictClass = 'verdict-suspicious';
+                verdictIcon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else { // malicious or error
+                verdictClass = 'verdict-malicious';
+                verdictIcon = '<i class="fa-solid fa-ban"></i>';
+            }
+            
+            // Format warnings list
+            let warningsHTML = '<p>No specific warnings were found. Looks safe!</p>';
+            if (result.warnings && result.warnings.length > 0) {
+                 warningsHTML = '';
+                 result.warnings.forEach(rawWarning => {
+                     // HERE'S THE KEY CHANGE: Translate each warning
+                     const translated = translateWarning(rawWarning); 
+
+                     warningsHTML += `
+                        <div class="warning-item">
+                            <div class="warning-header">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <h4>${translated.title}</h4>
+                            </div>
+                            <p class="warning-explanation">${translated.explanation}</p>
+                        </div>
+                     `;
+                 });
+            }
+
+            // Render all HTML
+            resultContainer.innerHTML = `
+                <div class="result-verdict ${verdictClass}">
+                    <h2>${verdictIcon} This Website is Potentially <strong>${verdictText}</strong></h2>
+                    <p>Analysis for: <strong>${result.url}</strong></p>
+                </div>
+
+                <div class="result-details">
+                    <div class="detail-box">
+                        <h4>Risk Score</h4>
+                        <p>${result.threat_score !== undefined ? result.threat_score : 'N/A'}/100</p>
+                    </div>
+                    <div class="detail-box">
+                        <h4>Website Age</h4>
+                        <p>${result.domain_age_days !== null && result.domain_age_days !== undefined ? result.domain_age_days + ' days' : 'Unknown'}</p>
+                    </div>
+                     <div class="detail-box">
+                        <h4>Analysis Source</h4>
+                        <p>${result.analysis_source.toUpperCase()}</p>
+                    </div>
+                </div>
+
+                <div class="detail-box" style="margin-top: 20px;">
+                     <h3 style="margin: 0 0 15px 0;"><i class="fa-solid fa-list-check"></i> Analysis Details</h3>
+                     ${warningsHTML}
+                </div>
+            `;
+            
+            resultContainer.classList.add('visible');
+        }
+
+        function displayNewsResult(result) {
+            let scoreColorClass = '';
+            if (result.fake_news_score < 40) {
+                scoreColorClass = 'verdict-legitimate';
+            } else if (result.fake_news_score < 70) {
+                scoreColorClass = 'verdict-suspicious';
+            } else {
+                scoreColorClass = 'verdict-malicious';
+            }
+
+            newsResultContainer.innerHTML = `
+                <div class="news-analysis-container">
+                    <div class="result-details">
+                        <div class="detail-box ${scoreColorClass}">
+                            <h4>Fake News Score</h4>
+                            <p>${result.fake_news_score !== undefined ? result.fake_news_score : 'N/A'}/100</p>
+                        </div>
+                        <div class="detail-box">
+                            <h4>Political Bias</h4>
+                            <p>${result.political_bias || 'N/A'}</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-box" style="margin-top: 20px;">
+                         <h3 style="margin: 0 0 15px 0;"><i class="fa-solid fa-lightbulb"></i> Reasoning</h3>
+                         <p class="reasoning">${result.reasoning || 'No reasoning provided.'}</p>
+                    </div>
+                </div>
+            `;
+
+            newsResultContainer.classList.add('visible');
+        }
+
+    </script>
+</body>
+</html>

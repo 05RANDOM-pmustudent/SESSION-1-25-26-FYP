@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AwareLink Website Analysis Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --background: #f0f4f8;
+            --surface: #ffffff;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            
+            --legitimate-bg: #e0fbe0;
+            --legitimate-text: #166534;
+            --suspicious-bg: #fffbe0;
+            --suspicious-text: #a16207;
+            --malicious-bg: #ffe0e0;
+            --malicious-text: #be123c;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--background);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* --- NEW: Style to prevent background scroll when modal is open --- */
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(200px);
+            z-index: -1;
+        }
+
+        body::before {
+            background-color: rgba(59, 130, 246, 0.15);
+            top: -150px;
+            left: -150px;
+        }
+
+        body::after {
+            background-color: rgba(236, 72, 153, 0.1);
+            bottom: -200px;
+            right: -150px;
+        }
+
+        header {
+            background-color: transparent;
+            padding: 1.5rem 0;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 0.6s 0.2s ease-out forwards;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px; 
+            margin: 40px auto;
+            padding: 0 20px;
+            flex-grow: 1;
+        }
+
+        .analyzer-card {
+            background-color: rgba(255, 255, 255, 0.65);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        .main-content .analyzer-card:nth-of-type(1) { animation-delay: 0.4s; }
+        .main-content .analyzer-card:nth-of-type(2) { animation-delay: 0.5s; }
+        .sidebar .analyzer-card:nth-of-type(1) { animation-delay: 0.6s; }
+        .sidebar .analyzer-card:nth-of-type(2) { animation-delay: 0.7s; }
+
+        .main-content, .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        @media (min-width: 992px) {
+            .container { display: flex; flex-direction: row; gap: 2rem; align-items: flex-start; }
+            .main-content { flex: 2; min-width: 0; }
+            .sidebar { flex: 1; position: sticky; top: 40px; min-width: 0; }
+             .analyzer-card { margin-bottom: 0; }
+        }
+        
+        .form-container { display: flex; gap: 10px; }
+        .form-container input, .form-container textarea { padding: 12px 16px; font-size: 1rem; flex-grow: 1; border: 1px solid var(--border-color); border-radius: 8px; transition: box-shadow 0.3s, border-color 0.3s; width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.5); }
+        .form-container input:focus, .form-container textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); border-color: var(--primary); }
+        
+        .form-container button { 
+            padding: 12px 24px; font-size: 1rem; font-weight: 500; background-color: var(--primary); border: none; color: white; cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; 
+            transition: background-color 0.2s, transform 0.15s ease-out;
+            transform-origin: center;
+        }
+        .form-container button:hover { 
+            background-color: var(--primary-hover); 
+            transform: scale(1.05);
+        }
+        .form-container button:active {
+            transform: scale(0.98);
+        }
+
+        .loader { width: 18px; height: 18px; border: 2px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeInDown { to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        .result-container { margin-top: 30px; opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+        .result-container.visible { opacity: 1; transform: translateY(0); }
+        
+        .result-verdict { 
+            padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; 
+            transform: scale(0.95);
+            opacity: 0;
+            animation: popIn 0.5s 0.2s ease-out forwards;
+        }
+        .result-verdict h2 { margin: 0 0 10px 0; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        .result-verdict h2 i {
+            display: inline-block;
+            animation: popIn 0.5s 0.4s ease-out forwards;
+            transform-origin: center;
+        }
+
+        .result-verdict p { margin: 0; font-size: 1rem; }
+        .verdict-legitimate { background-color: var(--legitimate-bg); color: var(--legitimate-text); }
+        .verdict-suspicious { background-color: var(--suspicious-bg); color: var(--suspicious-text); }
+        .verdict-malicious { background-color: var(--malicious-bg); color: var(--malicious-text); }
+
+        .result-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        
+        .detail-box, .warning-item { 
+            background: rgba(248, 250, 252, 0.7); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); 
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .result-container.visible .result-details .detail-box:nth-child(1), .modal-content .result-details .detail-box:nth-child(1) { animation-delay: 0.3s; }
+        .result-container.visible .result-details .detail-box:nth-child(2), .modal-content .result-details .detail-box:nth-child(2) { animation-delay: 0.4s; }
+        .result-container.visible .result-details .detail-box:nth-child(3), .modal-content .result-details .detail-box:nth-child(3) { animation-delay: 0.5s; }
+        .result-container.visible .detail-box.analysis-details, .modal-content .detail-box.analysis-details { animation-delay: 0.6s; }
+        .result-container.visible .warning-item:nth-child(1), .modal-content .warning-item:nth-child(1) { animation-delay: 0.7s; }
+        .result-container.visible .warning-item:nth-child(2), .modal-content .warning-item:nth-child(2) { animation-delay: 0.8s; }
+        
+        .detail-box h4 { margin: 0 0 10px 0; color: var(--text-secondary); font-weight: 500; }
+        .detail-box p { margin: 0; font-weight: 600; font-size: 1.25rem; }
+        
+        .warning-item { margin-bottom: 15px; padding: 10px; }
+        .warning-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .warning-explanation { margin: 0; color: var(--text-secondary); font-size: 0.95rem; }
+        .news-analysis-container .detail-box p { font-size: 1.1rem; }
+        .news-analysis-container .reasoning { font-size: 1rem; line-height: 1.5; color: var(--text-secondary); }
+        
+        .feedback-container { margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(226, 232, 240, 0.7); text-align: center; opacity: 0; transform: translateY(15px); animation: fadeInUp 0.5s 1s ease-out forwards; }
+        .feedback-container p { margin: 0 0 15px 0; font-weight: 500; color: var(--text-secondary); }
+        .feedback-buttons button { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; cursor: pointer; margin: 0 5px; transition: background-color 0.2s, color 0.2s, transform 0.15s ease-out; gap: 8px; }
+        .feedback-buttons button:hover { background-color: rgba(248, 250, 252, 0.7); border-color: #ced6e0; transform: scale(1.05); }
+        .feedback-buttons button:active { transform: scale(0.98); }
+        .feedback-buttons button:disabled { cursor: not-allowed; opacity: 0.6; }
+
+        .history-list, .community-highlights-list { list-style: none; padding: 0; margin: 0; }
+        .history-item, .community-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s, transform 0.2s ease-out; }
+        
+        .history-item:hover, .community-item:hover { 
+            background-color: rgba(248, 250, 252, 0.5);
+            transform: translateX(5px);
+         }
+
+        .history-item.is-new { animation: slideInLeft 0.5s ease-out forwards; }
+        .history-item:last-child, .community-item:last-child { border-bottom: none; }
+        .history-item .url, .community-item .url { font-weight: 500; word-break: break-all; padding-right: 10px; }
+        .history-item .flag { font-weight: 600; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; white-space: nowrap; }
+        .flag.legitimate { background-color: var(--legitimate-bg); color: var(--legitimate-text); }
+        .flag.suspicious { background-color: var(--suspicious-bg); color: var(--suspicious-text); }
+        .flag.malicious { background-color: var(--malicious-bg); color: var(--malicious-text); }
+        .community-item .score { font-weight: 700; color: var(--malicious-text); font-size: 1.1rem; }
+        .community-item .url { font-family: 'Courier New', Courier, monospace; color: var(--malicious-text); }
+        
+        footer { text-align: center; padding: 20px 0; color: var(--text-secondary); margin-top: auto; }
+
+        /* --- NEW: Modal Styles --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(30, 41, 59, 0.6);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .modal-container {
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.65);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1);
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(248, 250, 252, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .modal-close-btn:hover {
+            background-color: rgba(226, 232, 240, 0.8);
+            transform: rotate(90deg);
+        }
+
+    </style>
+</head>
+<body>
+    
+    <header>
+        <h1>AwareLink Website Analysis Tool</h1>
+    </header>
+
+    <div class="container">
+        <!-- Main content column -->
+        <div class="main-content">
+            <div class="analyzer-card">
+                <h2>Website Security Check</h2>
+                <div class="form-container">
+                    <input type="text" id="url" placeholder="Enter URL for analysis (e.g., example.com)" required>
+                    <button id="analyzeButton">
+                        <span id="button-text">Analyze</span>
+                        <span id="loader" class="loader" style="display: none;"></span>
+                    </button>
+                </div>
+                <div id="result-placeholder" style="text-align:center; margin-top: 30px; color: var(--text-secondary);">
+                    <p>Enter a URL above to check its safety.</p>
+                </div>
+                <div class="result-container" id="result"></div>
+            </div>
+
+            <div class="analyzer-card">
+                <h2>Fake News & Bias Detector</h2>
+                <div class="form-container" style="flex-direction: column;">
+                    <textarea id="news-text" rows="8" placeholder="Paste news article text here..."></textarea>
+                    <button id="analyzeNewsButton" style="align-self: flex-end;">
+                        <span id="news-button-text">Analyze News</span>
+                        <span id="news-loader" class="loader" style="display: none;"></span>
+                    </button>
+                </div>
+                <div id="news-result-placeholder" style="text-align:center; margin-top: 30px; color: var(--text-secondary);">
+                    <p>Paste an article above to check for fake news and bias.</p>
+                </div>
+                <div class="result-container" id="news-result"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar column -->
+        <div class="sidebar">
+            <div class="analyzer-card">
+                <h2><i class="fa-solid fa-fire" style="color: var(--malicious-text);"></i> Community Threat Alerts</h2>
+                <div id="community-highlights-placeholder" style="color: var(--text-secondary);">
+                    <p>Latest high-risk websites reported by the community.</p>
+                </div>
+                <div id="community-highlights-container" class="community-highlights-list"></div>
+            </div>
+
+            <div class="analyzer-card">
+                <h2><i class="fa-solid fa-clock-rotate-left"></i> Session History</h2>
+                <div id="history-placeholder" style="color: var(--text-secondary);">
+                    <p>Your recent scans will appear here.</p>
+                </div>
+                <div class="history-list" id="history-list-container"></div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 Website Analysis Tool | Powered by Flask</p>
+    </footer>
+
+    <!-- --- NEW: Modal HTML structure --- -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-container">
+            <button class="modal-close-btn" id="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-content" id="modal-content">
+                <!-- Dynamic content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- SCRIPT START ---
+        const analyzeButton = document.getElementById("analyzeButton");
+        const buttonText = document.getElementById("button-text");
+        const loader = document.getElementById("loader");
+        const urlInput = document.getElementById("url");
+        const resultContainer = document.getElementById("result");
+        const resultPlaceholder = document.getElementById("result-placeholder");
+        const analyzeNewsButton = document.getElementById("analyzeNewsButton");
+        const newsButtonText = document.getElementById("news-button-text");
+        const newsLoader = document.getElementById("news-loader");
+        const newsTextInput = document.getElementById("news-text");
+        const newsResultContainer = document.getElementById("news-result");
+        const newsResultPlaceholder = document.getElementById("news-result-placeholder");
+        const historyListContainer = document.getElementById('history-list-container');
+        const historyPlaceholder = document.getElementById('history-placeholder');
+        const communityHighlightsContainer = document.getElementById('community-highlights-container');
+        let sessionHistory = [];
+
+        // --- NEW: Modal elements ---
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalContent = document.getElementById('modal-content');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        
+        document.addEventListener('DOMContentLoaded', () => { loadCommunityHighlights(); });
+        
+        analyzeButton.addEventListener("click", handleAnalysis);
+        urlInput.addEventListener("keyup", (event) => { if (event.key === "Enter") handleAnalysis(); });
+        analyzeNewsButton.addEventListener("click", handleNewsAnalysis);
+        
+        // --- NEW: Modal close event listeners ---
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (event) => {
+            if (event.target === modalOverlay) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+
+        async function handleAnalysis() { 
+            const url = urlInput.value.trim(); 
+            if (!url) { alert("Please enter a URL."); return; } 
+            
+            buttonText.textContent = "Analyzing..."; 
+            loader.style.display = 'block'; 
+            analyzeButton.disabled = true; 
+            resultPlaceholder.style.display = 'none'; 
+            resultContainer.classList.remove('visible');
+            resultContainer.innerHTML = '';
+            
+            try { 
+                const response = await fetch('/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url }), }); 
+                if (!response.ok) { 
+                    const errorData = await response.json(); 
+                    throw new Error(errorData.error || `Analysis failed with status ${response.status}`); 
+                } 
+                const result = await response.json(); 
+                addToHistory(result); 
+                displayResult(result); 
+            } catch (error) { 
+                displayError(error.message); 
+            } finally { 
+                buttonText.textContent = 'Analyze'; 
+                loader.style.display = 'none'; 
+                analyzeButton.disabled = false; 
+            } 
+        }
+        
+        function addToHistory(result) { 
+            // Prevent duplicate entries
+            const existingIndex = sessionHistory.findIndex(item => item.url === result.url);
+            if (existingIndex > -1) {
+                sessionHistory.splice(existingIndex, 1);
+            }
+            sessionHistory.unshift(result); 
+            renderHistory(); 
+        }
+        
+        function renderHistory() { 
+            if (sessionHistory.length === 0) { 
+                historyPlaceholder.style.display = 'block'; 
+                historyListContainer.innerHTML = ''; 
+                return; 
+            } 
+            historyPlaceholder.style.display = 'none'; 
+            const oldHistory = historyListContainer.innerHTML;
+            historyListContainer.innerHTML = '';
+            
+            sessionHistory.forEach((item, index) => { 
+                const historyItem = document.createElement('div'); 
+                historyItem.className = 'history-item'; 
+                if (index === 0 && oldHistory.length > 0) {
+                     historyItem.classList.add('is-new');
+                }
+                historyItem.innerHTML = ` <span class="url">${item.url}</span> <span class="flag ${item.flag}">${item.flag}</span> `; 
+                
+                // --- UPDATED: Click event opens modal ---
+                historyItem.addEventListener('click', () => { 
+                    openModal(item);
+                }); 
+                
+                historyListContainer.appendChild(historyItem); 
+
+                if (historyItem.classList.contains('is-new')) {
+                    setTimeout(() => historyItem.classList.remove('is-new'), 500);
+                }
+            }); 
+        }
+        
+        /**
+         * Loads the community highlights by fetching data from the backend API.
+         */
+        async function loadCommunityHighlights() {
+            try {
+                // Fetch threat data from the new API endpoint
+                const response = await fetch('/api/community-threats');
+                if (!response.ok) {
+                    throw new Error(`Network response error: ${response.statusText}`);
+                }
+               
+                const threats = await response.json();
+                const placeholder = document.getElementById('community-highlights-placeholder');
+                if (!threats || threats.length === 0) {
+                    if(placeholder) placeholder.innerHTML = '<p>No high-risk threats reported recently. Stay vigilant!</p>';
+                    placeholder.style.display = 'block';
+                    communityHighlightsContainer.innerHTML = '';
+                    return;
+                }
+               
+                if (placeholder) placeholder.style.display = 'none';
+                 // Clear any existing dummy/old data container.
+                communityHighlightsContainer.innerHTML = '';
+
+                threats.forEach(item => {
+                    const communityItem = document.createElement('div');
+                    communityItem.className = 'community-item';
+                    communityItem.innerHTML = ` <span class="url">${item.url}</span> <span class="score">${item.score}/100</span> `;
+                    
+                    // --- NEW: Click event opens modal with dummy data ---
+                    communityItem.addEventListener('click', () => {
+                        const dummyResult = {
+                            url: item.url,
+                            flag: 'malicious',
+                            threat_score: item.score,
+                            domain_age_days: 'N/A',
+                            analysis_source: 'Community',
+                            warnings: ['This URL was identified as a high-risk threat by the community. Proceed with extreme caution.']
+                        };
+                        openModal(dummyResult);
+                    });
+
+                    communityHighlightsContainer.appendChild(communityItem);
+                });
+            } catch (error) {
+                console.error('Error loading community highlights:', error);
+                const placeholder = document.getElementById('community-highlights-placeholder');
+                if (placeholder) {
+                    placeholder.innerHTML = '<p>Unable to load community threats at the moment. Please try again later.</p>';
+                }
+            }
+        }
+        
+        async function handleNewsAnalysis() { 
+            const text = newsTextInput.value.trim(); 
+            if (!text) { alert("Please paste some news text to analyze."); return; } 
+            
+            newsButtonText.textContent = "Analyzing..."; 
+            newsLoader.style.display = 'block'; 
+            analyzeNewsButton.disabled = true; 
+            newsResultPlaceholder.style.display = 'none'; 
+            newsResultContainer.classList.remove('visible'); 
+            newsResultContainer.innerHTML = '';
+            
+            try { 
+                const response = await fetch('/analyze-news', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text }), }); 
+                if (!response.ok) { 
+                    const errorData = await response.json(); 
+                    throw new Error(errorData.error || `News analysis failed with status ${response.status}`); 
+                } 
+                const result = await response.json(); 
+                displayNewsResult(result); 
+            } catch (error) { 
+                displayNewsError(error.message); 
+            } finally { 
+                newsButtonText.textContent = 'Analyze News'; 
+                newsLoader.style.display = 'none'; 
+                analyzeNewsButton.disabled = false; 
+            } 
+        }
+
+        function animateCountUp(element, finalValue, duration = 1500) {
+            let start = 0;
+            const end = parseInt(finalValue, 10) || 0;
+            if (end === 0) {
+                 element.textContent = '0';
+                 return;
+            }
+            const stepTime = Math.abs(Math.floor(duration / end));
+            const timer = setInterval(() => {
+                start += 1;
+                element.textContent = `${start}`;
+                if (start === end) {
+                    clearInterval(timer);
+                }
+            }, stepTime);
+        }
+        
+        function displayError(errorMessage) { 
+            resultContainer.innerHTML = `<div class="result-verdict verdict-malicious"><h2><i class="fa-solid fa-circle-xmark"></i> Analysis Error</h2><p>${errorMessage}</p></div>`; 
+            resultContainer.classList.add('visible'); 
+        }
+        
+        function displayNewsError(errorMessage) { 
+            newsResultContainer.innerHTML = `<div class="result-verdict verdict-malicious"><h2><i class="fa-solid fa-circle-xmark"></i> Analysis Error</h2><p>${errorMessage}</p></div>`; 
+            newsResultContainer.classList.add('visible'); 
+        }
+        
+        function translateWarning(warning) { let translation = { title: "Community Report", explanation: warning }; if (warning.startsWith("Uses IP address")) { translation = { title: "Uses a Direct IP Address", explanation: "Legitimate websites use a domain name (like google.com), not a numerical IP address. This is a major red flag for phishing." }; } else if (warning.startsWith("Contains '@' symbol")) { translation = { title: "Contains '@' Symbol", explanation: "This may be an attempt to embed credentials in the URL, a common phishing trick to steal login information." }; } else if (warning.startsWith("Excessive hyphens")) { translation = { title: "Too Many Hyphens in Address", explanation: "Scammers often use hyphens to mimic legitimate sites (e.g., 'your-bank-online-security.com'). Too many is a sign of deception." }; } else if (warning.startsWith("Suspicious TLD")) { const tld = warning.split(':')[1] ? warning.split(':')[1].trim() : ''; translation = { title: "Uncommon or Risky Domain Ending", explanation: `The website uses the '${tld}' domain ending, which is cheap and popular with scammers for creating throwaway websites.` }; } else if (warning.startsWith("Excessively long domain name")) { translation = { title: "Excessively Long Domain Name", explanation: "Very long domain names are often used to confuse users and hide malicious intent." }; } else if (warning.startsWith("Too many subdomains")) { translation = { title: "Too Many Subdomains", explanation: "Excessive subdomains can be used to deceive users into thinking it's a legitimate nested site." }; } else if (warning.startsWith("Contains sensitive/trigger keywords")) { translation = { title: "Suspicious Keywords in Domain", explanation: "Words like 'login', 'secure', or 'banking' in the domain may indicate an attempt to impersonate trusted services." }; } else if (warning.startsWith("Suspicious subdomain usage")) { translation = { title: "Suspicious Subdomain Pattern", explanation: "This matches known scam patterns, such as fake government or subsidy sites." }; } else if (warning.startsWith("New domain")) { const age = warning.match(/\d+/) ? warning.match(/\d+/)[0] : 'a few'; translation = { title: "Very New Website", explanation: `This website was registered only ${age} days ago. Scammers create new sites constantly, so a new domain is a sign of higher risk.` }; } else if (warning.startsWith("Invalid or expiring SSL")) { translation = { title: "Invalid or Expiring SSL Certificate", explanation: "The site's security certificate is invalid or about to expire, which can expose your data to interception." }; } else if (warning.startsWith("No HTTPS")) { translation = { title: "Insecure Connection (No HTTPS)", explanation: "This site does not use basic encryption. Any information you send (passwords, credit cards) can be easily stolen." }; } else if (warning.startsWith("Missing security headers")) { translation = { title: "Missing Modern Security Features", explanation: "The website is missing standard security features that protect visitors from common attacks like clickjacking." }; } else if (warning.startsWith("Excessive hidden elements")) { translation = { title: "Excessive Hidden Elements", explanation: "Too many hidden parts on the page could be hiding malicious code or deceptive content." }; } else if (warning.startsWith("Multiple iframes")) { translation = { title: "Multiple Iframes Detected", explanation: "Excessive iframes can be used to embed harmful content from other sites without your knowledge." }; } else if (warning.startsWith("Could not determine domain age")) { translation = { title: "Unknown Domain Age", explanation: "We couldn't retrieve the registration date, which makes it harder to assess trustworthiness." }; } else if (warning === "Looks normal") { translation = { title: "URL Structure Normal", explanation: "The website's address doesn't show any common signs of deception." }; } return translation; }
+        
+        // --- NEW: Reusable function to generate result HTML ---
+        function generateResultHTML(result) {
+            let verdictClass = '', verdictIcon = '', verdictText = result.flag.charAt(0).toUpperCase() + result.flag.slice(1); 
+            if (result.flag === 'legitimate') { verdictClass = 'verdict-legitimate'; verdictIcon = '<i class="fa-solid fa-shield-halved"></i>'; } 
+            else if (result.flag === 'suspicious') { verdictClass = 'verdict-suspicious'; verdictIcon = '<i class="fa-solid fa-triangle-exclamation"></i>'; } 
+            else { verdictClass = 'verdict-malicious'; verdictIcon = '<i class="fa-solid fa-ban"></i>'; } 
+            
+            let warningsHTML = '<div class="warning-item"><div class="warning-header"><h4><i class="fa-solid fa-check-circle" style="color: var(--legitimate-text);"></i> All Clear</h4></div><p class="warning-explanation">No specific warnings were triggered based on our analysis.</p></div>'; 
+            if (result.warnings && result.warnings.length > 0) { 
+                warningsHTML = ''; 
+                result.warnings.forEach(rawWarning => { 
+                    const translated = translateWarning(rawWarning); 
+                    warningsHTML += `<div class="warning-item"><div class="warning-header"><i class="fa-solid fa-triangle-exclamation"></i><h4>${translated.title}</h4></div><p class="warning-explanation">${translated.explanation}</p></div>`; 
+                }); 
+            } 
+            
+            return `
+                <div class="result-verdict ${verdictClass}">
+                    <h2>${verdictIcon} This Website is Potentially <strong>${verdictText}</strong></h2>
+                    <p>Analysis for: <strong>${result.url}</strong></p>
+                </div>
+                <div class="result-details">
+                    <div class="detail-box">
+                        <h4>Risk Score</h4>
+                        <p><span class="score-value">0</span>/100</p>
+                    </div>
+                    <div class="detail-box">
+                        <h4>Website Age</h4>
+                        <p>${result.domain_age_days !== null && result.domain_age_days !== undefined ? result.domain_age_days + ' days' : 'Unknown'}</p>
+                    </div>
+                    <div class="detail-box">
+                        <h4>Analysis Source</h4>
+                        <p>${result.analysis_source.toUpperCase()}</p>
+                    </div>
+                </div>
+                <div class="detail-box analysis-details" style="margin-top: 20px;">
+                    <h3 style="margin: 0 0 15px 0;"><i class="fa-solid fa-list-check"></i> Analysis Details</h3>
+                    ${warningsHTML}
+                </div>`;
+        }
+
+        function displayResult(result) { 
+            const feedbackHTML = `<div class="feedback-container" id="feedback-for-${result.url.replace(/[^a-zA-Z0-9]/g, '')}"><p>Was this analysis accurate?</p><div class="feedback-buttons"><button onclick="handleFeedback(true, '${result.url}')"><i class="fa-solid fa-thumbs-up"></i> Accurate</button><button onclick="handleFeedback(false, '${result.url}')"><i class="fa-solid fa-thumbs-down"></i> Inaccurate</button></div></div>`; 
+            
+            resultContainer.innerHTML = generateResultHTML(result) + feedbackHTML;
+            resultContainer.classList.add('visible'); 
+
+            const scoreElement = resultContainer.querySelector('.score-value');
+            if (scoreElement) {
+                const score = result.threat_score !== undefined ? result.threat_score : 0;
+                animateCountUp(scoreElement, score);
+            }
+        }
+        
+        /**
+         * NEW: Sends user feedback on scan accuracy to the server.
+         * @param {boolean} isAccurate - Whether the user found the analysis accurate
+         * @param {string} url - The URL analyzed
+         */
+        async function handleFeedback(isAccurate, url) {
+            console.log(`Feedback received for ${url}: ${isAccurate ? 'Accurate' : 'Inaccurate'}`);
+            const feedbackContainerId = `feedback-for-${url.replace(/[^a-zA-Z0-9]/g, '')}`;
+            const feedbackContainer = document.getElementById(feedbackContainerId);
+            if (feedbackContainer) {
+                feedbackContainer.innerHTML = `<p>Submitting feedback...</p>`;
+            }
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accurate: isAccurate, url: url })
+                });
+                if (!response.ok) {
+                    throw new Error(`Failed to submit feedback: ${response.statusText}`);
+                }
+                const data = await response.json();
+                if (data.status === 'success') {
+                    if (feedbackContainer) {
+                        feedbackContainer.innerHTML = `<p style="opacity:0; animation: fadeInUp 0.5s forwards;">Thank you for your feedback!</p>`;
+                    }
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+            } catch (error) {
+                console.error('Feedback submission error:', error);
+                if (feedbackContainer) {
+                    feedbackContainer.innerHTML = `<p style="opacity:0; animation: fadeInUp 0.5s forwards;">Feedback submission failed. Please try again.</p>`;
+                }
+            }
+        }
+        
+        function displayNewsResult(result) { 
+            let scoreColorClass = ''; 
+            if (result.fake_news_score < 40) { scoreColorClass = 'verdict-legitimate'; } 
+            else if (result.fake_news_score < 70) { scoreColorClass = 'verdict-suspicious'; } 
+            else { scoreColorClass = 'verdict-malicious'; } 
+            
+            newsResultContainer.innerHTML = `
+                <div class="news-analysis-container">
+                    <div class="result-details">
+                        <div class="detail-box ${scoreColorClass}">
+                            <h4>Fake News Score</h4>
+                            <p><span class="score-value">0</span>/100</p>
+                        </div>
+                        <div class="detail-box">
+                            <h4>Political Bias</h4>
+                            <p>${result.political_bias || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="detail-box analysis-details" style="margin-top: 20px;">
+                        <h3 style="margin: 0 0 15px 0;"><i class="fa-solid fa-lightbulb"></i> Reasoning</h3>
+                        <p class="reasoning">${result.reasoning || 'No reasoning provided.'}</p>
+                    </div>
+                </div>`; 
+            
+            newsResultContainer.classList.add('visible'); 
+            const scoreElement = newsResultContainer.querySelector('.score-value');
+            if(scoreElement) {
+                const score = result.fake_news_score !== undefined ? result.fake_news_score : 0;
+                animateCountUp(scoreElement, score);
+            }
+        }
+        
+        // --- NEW: Modal control functions ---
+        function openModal(result) {
+            modalContent.innerHTML = generateResultHTML(result);
+            document.body.classList.add('modal-open');
+            modalOverlay.classList.add('active');
+
+            const scoreElement = modalContent.querySelector('.score-value');
+            if (scoreElement) {
+                const score = result.threat_score !== undefined ? result.threat_score : 0;
+                // Use a shorter animation for the modal so it feels responsive
+                animateCountUp(scoreElement, score, 800);
+            }
+        }
+
+        function closeModal() {
+            document.body.classList.remove('modal-open');
+            modalOverlay.classList.remove('active');
+        }
+
+    </script>
+</body>
+</html>
