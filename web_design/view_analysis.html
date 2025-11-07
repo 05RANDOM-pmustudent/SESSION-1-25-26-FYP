@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Result - AwareLink</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --background: #f0f4f8; --surface: #ffffff; --primary: #3b82f6;
+            --text-primary: #1e293b; --text-secondary: #64748b; --border-color: #e2e8f0;
+            --legitimate-bg: #e0fbe0; --legitimate-text: #166534; --suspicious-bg: #fffbe0;
+            --suspicious-text: #a16207; --malicious-bg: #ffe0e0; --malicious-text: #be123c;
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        body {
+            font-family: 'Inter', sans-serif; margin: 0; background-color: var(--background);
+            color: var(--text-primary); display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 100vh; padding: 1rem;
+        }
+        .container {
+            width: 100%; max-width: 800px; background-color: var(--surface);
+            padding: 2rem; border-radius: 12px; box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+        .result-verdict {
+            padding: 16px; border-radius: 10px; text-align: center; margin-bottom: 24px;
+        }
+        .result-verdict h2 { margin: 0 0 8px 0; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .result-verdict p { margin: 0; }
+        .verdict-legitimate { background-color: var(--legitimate-bg); color: var(--legitimate-text); }
+        .verdict-suspicious { background-color: var(--suspicious-bg); color: var(--suspicious-text); }
+        .verdict-malicious { background-color: var(--malicious-bg); color: var(--malicious-text); }
+        
+        .result-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .detail-box { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
+        .detail-box h4 { margin: 0 0 8px 0; color: var(--text-secondary); font-weight: 500; font-size: 0.9rem; }
+        .detail-box p { margin: 0; font-weight: 600; font-size: 1.2rem; }
+        .warning-item {
+            padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 0.5rem;
+        }
+        footer { margin-top: 2rem; text-align: center; }
+        .footer-link {
+            display: inline-block; padding: 10px 20px; background-color: var(--primary); color: white;
+            text-decoration: none; border-radius: 8px; font-weight: 500; transition: background-color 0.2s;
+        }
+        .footer-link:hover { background-color: #2563eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if result %}
+            {% set verdict_map = {
+                'legitimate': {'class': 'verdict-legitimate', 'icon': 'fa-shield-halved'},
+                'suspicious': {'class': 'verdict-suspicious', 'icon': 'fa-triangle-exclamation'},
+                'malicious': {'class': 'verdict-malicious', 'icon': 'fa-ban'}
+            } %}
+            <div class="result-verdict {{ verdict_map[result.flag]['class'] }}">
+                <h2>
+                    <i class="fa-solid {{ verdict_map[result.flag]['icon'] }}"></i>
+                    Potentially {{ result.flag | capitalize }}
+                </h2>
+                <p>Scan result for: <strong>{{ result.url }}</strong></p>
+            </div>
+
+            <div class="result-details">
+                <div class="detail-box">
+                    <h4>Risk Score</h4>
+                    <p>{{ result.threat_score }}/100</p>
+                </div>
+                <div class="detail-box">
+                    <h4>Website Age</h4>
+                    <p>{{ result.domain_age_days if result.domain_age_days is not none else 'Unknown' }} days</p>
+                </div>
+                <div class="detail-box">
+                    <h4>Source</h4>
+                    <p>{{ result.analysis_source | upper }}</p>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 1rem;">Analysis Details</h3>
+                {% for warning in result.warnings %}
+                    <div class="warning-item">{{ warning }}</div>
+                {% else %}
+                    <div class="warning-item">No specific warnings were triggered.</div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <h2>Analysis Not Found</h2>
+            <p>The link may be invalid or the analysis has been removed.</p>
+        {% endif %}
+
+        <footer>
+            <a href="/" class="footer-link">Scan another URL with AwareLink</a>
+        </footer>
+    </div>
+</body>
+</html>s

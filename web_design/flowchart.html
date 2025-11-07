@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Compact Flowchart</title>
+    <style>
+        /* --- General Body & Font Styles --- */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        /* --- Main Flowchart Container --- */
+        .flowchart-container {
+            /* MODIFIED: Thinner max-width for the entire diagram */
+            max-width: 1100px; 
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        /* --- Base style for all flowchart shapes --- */
+        .flow-element {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 5px 10px;
+            margin: 3px 0;
+            border: 1px solid #ccc;
+            background-color: #ffffff;
+        }
+
+        /* --- Terminator Shape (Start/End) --- */
+        .terminator {
+            background-color: #fce1ae;
+            border-radius: 50%;
+            width: 100px;
+            height: 35px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* --- Process Shape --- */
+        .process {
+            background-color: #cce3f5;
+            border-radius: 3px;
+            width: 100%;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        .process.full-width {
+            /* MODIFIED: Thinner max-width for single boxes */
+            max-width: 500px; 
+        }
+
+        /* --- Text styling within the process boxes --- */
+        .process h3 {
+            margin: 0 0 5px 0;
+            font-size: 13px;
+        }
+        .process ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+            text-align: left;
+            font-size: 11px;
+        }
+        .process li {
+            padding-left: 10px;
+            margin-bottom: 2px;
+            line-height: 1.2;
+            position: relative;
+        }
+        .process li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #3498db;
+        }
+        
+        /* --- Simple Arrow Connector --- */
+        .arrow {
+            font-size: 14px;
+            color: #555;
+            margin: 2px 0;
+        }
+        
+        /* --- NEW: Branching Arrow Logic --- */
+        .branch-connector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin: 2px 0;
+        }
+        .vertical-stem {
+            width: 2px;
+            height: 10px;
+            background-color: #555;
+        }
+        .horizontal-bar {
+            width: 100%;
+            height: 2px;
+            background-color: #555;
+        }
+        .arrow-row {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+        }
+        .arrow-row .arrow {
+            margin: 0;
+        }
+        
+        /* --- Multi-column Layout --- */
+        .row-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: stretch;
+            width: 100%;
+            /* MODIFIED: Tighter gap */
+            gap: 15px; 
+        }
+        .column {
+            flex: 1;
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+
+<div class="flowchart-container">
+
+    <div class="flow-element terminator">Start</div>
+    <div class="arrow">↓</div>
+
+    <div class="flow-element process full-width">
+        <h3>Phase 1: Planning & Local Setup (Weeks 1-2)</h3>
+        <ul>
+            <li>Project Kick-off, Scope Definition, Finalize Requirements</li>
+            <li>Initialize GitHub Repo: 05RANDOM-pmustudent/...</li>
+            <li><strong>Setup Local Dev Stack (Flask, Python, Local MySQL)</strong></li>
+        </ul>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="flow-element process full-width">
+        <h3>Phase 2: Core Development Sprints (Weeks 3-11)</h3>
+    </div>
+
+    <!-- NEW Branching Connector for Sprints -->
+    <div class="branch-connector">
+        <div class="vertical-stem"></div>
+        <div class="horizontal-bar"></div>
+        <div class="arrow-row">
+            <div class="arrow">↓</div>
+            <div class="arrow">↓</div>
+            <div class="arrow">↓</div>
+        </div>
+    </div>
+    
+    <!-- Sprints Side-by-Side -->
+    <div class="row-container">
+        <div class="column">
+            <div class="flow-element process">
+                <h3>Sprint 1 (Week 3-5): Backend & Local DB</h3>
+                <ul>
+                    <li>Implement DB Schema (Tables, Relations)</li>
+                    <li>Build Core Flask APIs with CRUD ops</li>
+                    <li><strong>Connect APIs to Local MySQL instance</strong></li>
+                    <li>Develop & Test Core Analysis Logic</li>
+                </ul>
+            </div>
+        </div>
+        <div class="column">
+            <div class="flow-element process">
+                <h3>Sprint 2 (Week 6-8): Frontend & API Link</h3>
+                <ul>
+                    <li>Develop Main Frontend UI (HTML, CSS, JS)</li>
+                    <li><strong>Integrate Frontend with Backend APIs</strong></li>
+                    <li>Build Admin Dashboard, News Feed, etc.</li>
+                    <li>Implement Session History, Modals</li>
+                </ul>
+            </div>
+        </div>
+        <div class="column">
+            <div class="flow-element process">
+                <h3>Sprint 3 (Week 9-11): Cloud & Polish</h3>
+                <ul>
+                    <li>UI/UX Refinements, dark mode, responsive</li>
+                    <li><strong>Provision Aiven MySQL Cloud DB</strong></li>
+                    <li><strong>Migrate schema & data to Aiven</strong></li>
+                    <li><strong>Reconfigure app to connect to Aiven</strong></li>
+                    <li>Conduct Full Integration Testing</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="branch-connector">
+        <div class="arrow-row">
+             <div class="arrow">↓</div>
+             <div class="arrow">↓</div>
+             <div class="arrow">↓</div>
+        </div>
+        <div class="horizontal-bar"></div>
+        <div class="vertical-stem"></div>
+    </div>
+
+    <div class="flow-element process full-width">
+        <h3>Phase 3: Deployment & Finalization (Week 12-13)</h3>
+    </div>
+    
+    <!-- NEW Branching Connector for Deployment -->
+    <div class="branch-connector">
+         <div class="vertical-stem"></div>
+         <div class="horizontal-bar"></div>
+         <div class="arrow-row">
+             <div class="arrow">↓</div>
+             <div class="arrow">↓</div>
+         </div>
+    </div>
+
+    <!-- Deployment Steps Side-by-Side -->
+    <div class="row-container">
+        <div class="column"></div> <!-- Empty column for spacing -->
+        <div class="column">
+            <div class="flow-element process">
+                <h3>Staging Deployment & UAT (Week 12)</h3>
+                <ul>
+                    <li>Create Staging Environment on Render</li>
+                    <li>Load Testing, Security Scans, Bug Bash</li>
+                    <li><strong>CODE FREEZE</strong> on features</li>
+                </ul>
+            </div>
+        </div>
+        <div class="column">
+            <div class="flow-element process">
+                <h3>Production Go-Live (Week 13)</h3>
+                <ul>
+                    <li>Merge `develop` into `main` on GitHub</li>
+                    <li>Configure Production Env on Render</li>
+                    <li><strong>Deploy `main` to: awarelink-fyp.onrender.com</strong></li>
+                    <li>Post-Launch Smoke Tests & Monitor Logs</li>
+                </ul>
+            </div>
+        </div>
+        <div class="column"></div> <!-- Empty column for spacing -->
+    </div>
+    
+    <div class="arrow">↓</div>
+    <div class="flow-element terminator">Stop</div>
+
+</div>
+
+</body>
+</html>

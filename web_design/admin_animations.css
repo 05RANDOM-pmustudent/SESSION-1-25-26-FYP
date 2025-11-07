@@ -1,0 +1,59 @@
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.admin-card {
+    /* Set initial state and apply the animation */
+    opacity: 0; /* Start invisible */
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.stat-item {
+    opacity: 0;
+    animation: scaleIn 0.5s ease-out forwards;
+}
+
+.sidebar .admin-card:nth-of-type(1) { animation-delay: 0.2s; }
+.sidebar .admin-card:nth-of-type(2) { animation-delay: 0.4s; }
+.main-content .admin-card:nth-of-type(1) { animation-delay: 0.3s; }
+
+.stats-grid .stat-item:nth-child(1) { animation-delay: 0.4s; }
+.stats-grid .stat-item:nth-child(2) { animation-delay: 0.5s; }
+
+.anim-row-in {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.btn, .search-input, .date-filters input {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn:hover, .search-input:focus, .date-filters input:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .btn:hover,
+body.dark-mode .search-input:focus,
+body.dark-mode .date-filters input:focus {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}

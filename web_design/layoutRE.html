@@ -8,413 +8,522 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
-            --background: #f0f4f8;
-            --surface: #ffffff;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border-color: #e2e8f0;
-            
-            --legitimate-bg: #e0fbe0;
-            --legitimate-text: #166534;
-            --suspicious-bg: #fffbe0;
-            --suspicious-text: #a16207;
-            --malicious-bg: #ffe0e0;
-            --malicious-text: #be123c;
+            --background: #f0f4f8; --surface: #ffffff; --primary: #3b82f6; --primary-hover: #2563eb;
+            --text-primary: #1e293b; --text-secondary: #64748b; --border-color: #e2e8f0;
+            --legitimate-bg: #e0fbe0; --legitimate-text: #166534; --suspicious-bg: #fffbe0;
+            --suspicious-text: #a16207; --malicious-bg: #ffe0e0; --malicious-text: #be123c;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
         }
-
+        body.dark-mode {
+            --background: #0f172a; --surface: #1e293b; --primary: #60a5fa; --primary-hover: #3b82f6;
+            --text-primary: #e2e8f0; --text-secondary: #94a3b8; --border-color: #334155;
+            --legitimate-bg: rgba(34, 197, 94, 0.15); --legitimate-text: #4ade80;
+            --suspicious-bg: rgba(234, 179, 8, 0.15); --suspicious-text: #facc15;
+            --malicious-bg: rgba(239, 68, 68, 0.15); --malicious-text: #f87171;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
         body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            background-color: var(--background);
-            color: var(--text-primary);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
+            font-family: 'Inter', sans-serif; margin: 0; background-color: var(--background); color: var(--text-primary);
+            display: flex; flex-direction: column; min-height: 100vh; position: relative; overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
+        body.modal-open { overflow: hidden; }
 
-        /* --- NEW: Style to prevent background scroll when modal is open --- */
-        body.modal-open {
-            overflow: hidden;
+        body::before, body::after {
+            content: ''; position: absolute; width: 400px; height: 400px;
+            border-radius: 50%; filter: blur(150px); z-index: -1; opacity: 0.3;
         }
-
-        body::before,
-        body::after {
-            content: '';
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            border-radius: 50%;
-            filter: blur(200px);
-            z-index: -1;
-        }
-
-        body::before {
-            background-color: rgba(59, 130, 246, 0.15);
-            top: -150px;
-            left: -150px;
-        }
-
-        body::after {
-            background-color: rgba(236, 72, 153, 0.1);
-            bottom: -200px;
-            right: -150px;
-        }
+        body::before { background-color: rgba(59, 130, 246, 0.1); top: -100px; left: -100px; }
+        body::after { background-color: rgba(236, 72, 153, 0.08); bottom: -150px; right: -100px; }
 
         header {
-            background-color: transparent;
-            padding: 1.5rem 0;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(-20px);
-            animation: fadeInDown 0.6s 0.2s ease-out forwards;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.5rem; background: var(--surface); box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(10px); opacity: 0; transform: translateY(-20px); animation: fadeInDown 0.6s 0.2s ease-out forwards;
         }
-
-        header h1 {
-            margin: 0;
-            font-size: 1.75rem;
-            font-weight: 600;
+        .logo {
+            display: flex; align-items: center; gap: 0.5rem; margin: 0;
+            font-size: 1.5rem; font-weight: 700;
         }
-
-        .container {
-            width: 100%;
-            max-width: 1200px; 
-            margin: 40px auto;
-            padding: 0 20px;
-            flex-grow: 1;
+        .logo i { color: var(--primary); font-size: 1.8rem; }
+        .header-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .admin-link-header {
+            text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 500;
+            background-color: var(--surface); color: var(--text-primary); border: 1px solid var(--border-color);
+            transition: all 0.2s ease; box-shadow: var(--shadow-sm);
         }
-
+        .admin-link-header:hover { background-color: var(--background); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .dark-mode-toggle {
+            background: var(--surface); border: 1px solid var(--border-color); color: var(--text-primary);
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            transition: all 0.2s; box-shadow: var(--shadow-sm);
+        }
+        .dark-mode-toggle:hover { transform: scale(1.05) rotate(15deg); box-shadow: var(--shadow-md); }
+        .container { width: 100%; max-width: 1200px; margin: 10px auto; padding: 0 15px; flex-grow: 1; }
         .analyzer-card {
-            background-color: rgba(255, 255, 255, 0.65);
-            -webkit-backdrop-filter: blur(16px);
-            backdrop-filter: blur(16px);
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            margin-bottom: 2rem;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.6s ease-out forwards;
+            background-color: var(--surface); backdrop-filter: blur(16px);
+            padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color); margin-bottom: 1rem;
+            opacity: 0; transform: translateY(20px); animation: fadeInUp 0.6s ease-out forwards;
         }
-        
+        body.dark-mode .analyzer-card { background-color: rgba(30, 41, 59, 0.6); }
         .main-content .analyzer-card:nth-of-type(1) { animation-delay: 0.4s; }
         .main-content .analyzer-card:nth-of-type(2) { animation-delay: 0.5s; }
-        .sidebar .analyzer-card:nth-of-type(1) { animation-delay: 0.6s; }
-        .sidebar .analyzer-card:nth-of-type(2) { animation-delay: 0.7s; }
+        .sidebar .analyzer-card:nth-of-type(1) { animation-delay: 0.7s; }
+        .sidebar .analyzer-card:nth-of-type(2) { animation-delay: 0.8s; }
+        .sidebar .analyzer-card:nth-of-type(3) { animation-delay: 0.9s; }
 
-        .main-content, .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
+        .main-content, .sidebar { display: flex; flex-direction: column; gap: 1rem; }
         @media (min-width: 992px) {
-            .container { display: flex; flex-direction: row; gap: 2rem; align-items: flex-start; }
+            .container { display: flex; flex-direction: row; gap: 1.5rem; align-items: flex-start; }
             .main-content { flex: 2; min-width: 0; }
-            .sidebar { flex: 1; position: sticky; top: 40px; min-width: 0; }
-             .analyzer-card { margin-bottom: 0; }
+            .sidebar { flex: 1; position: sticky; top: 30px; min-width: 0; }
+            .analyzer-card { margin-bottom: 0; }
         }
         
-        .form-container { display: flex; gap: 10px; }
-        .form-container input, .form-container textarea { padding: 12px 16px; font-size: 1rem; flex-grow: 1; border: 1px solid var(--border-color); border-radius: 8px; transition: box-shadow 0.3s, border-color 0.3s; width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.5); }
-        .form-container input:focus, .form-container textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); border-color: var(--primary); }
+        .form-container { display: flex; gap: 10px; margin-bottom: 1rem; }
+        .form-container input, .form-container textarea {
+            padding: 10px 14px; font-size: 1rem; flex-grow: 1; border: 1px solid var(--border-color);
+            border-radius: 8px; transition: box-shadow 0.3s, border-color 0.3s;
+            width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.1); color: var(--text-primary);
+        }
+        body.dark-mode .form-container input, body.dark-mode .form-container textarea { background: rgba(15, 23, 42, 0.5); }
+        .form-container input:focus, .form-container textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5); border-color: var(--primary); }
         
         .form-container button { 
-            padding: 12px 24px; font-size: 1rem; font-weight: 500; background-color: var(--primary); border: none; color: white; cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; 
-            transition: background-color 0.2s, transform 0.15s ease-out;
-            transform-origin: center;
+            padding: 10px 20px; font-size: 1rem; font-weight: 500; background-color: var(--primary); border: none; color: white;
+            cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; 
+            transition: background-color 0.2s, transform 0.15s ease-out; transform-origin: center; box-shadow: var(--shadow-sm);
         }
-        .form-container button:hover { 
-            background-color: var(--primary-hover); 
-            transform: scale(1.05);
-        }
-        .form-container button:active {
-            transform: scale(0.98);
-        }
+        .form-container button:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .form-container button:active { transform: scale(0.98); }
 
-        .loader { width: 18px; height: 18px; border: 2px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        /* --- NEW TAB STYLES --- */
+        .tab-nav {
+            display: flex; border-bottom: 1px solid var(--border-color);
+            margin: -1rem -1.5rem 1rem -1.5rem; padding: 0 1.5rem;
+        }
+        .tab-button {
+            padding: 0.75rem 1rem; border: none; background-color: transparent; color: var(--text-secondary);
+            font-size: 1rem; font-weight: 500; cursor: pointer; position: relative;
+            transition: color 0.2s ease-in-out; display: flex; align-items: center; gap: 8px;
+        }
+        .tab-button:hover { color: var(--text-primary); }
+        .tab-button.active { color: var(--primary); }
+        .tab-button.active::after {
+            content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+            height: 2px; background-color: var(--primary); border-radius: 2px 2px 0 0;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeInUp 0.5s ease-out forwards; }
+        /* --- END NEW TAB STYLES --- */
+
+        #screenshot-upload-label {
+            padding: 10px 16px; border: 2px dashed var(--border-color); border-radius: 8px;
+            text-align: center; color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+            display: block; margin-bottom: 0.5rem;
+        }
+        #screenshot-upload-label:hover { border-color: var(--primary); background-color: rgba(96, 165, 250, 0.1); }
+        #screenshot-upload-label.has-file { border-color: var(--legitimate-text); background-color: var(--legitimate-bg); color: var(--legitimate-text); }
+        #screenshot-upload { display: none; }
+        #screenshot-preview { max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 10px; display: none; box-shadow: var(--shadow-sm); }
+
+        .loader { width: 16px; height: 16px; border: 2px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
         
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes fadeInDown { to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes fadeIn { to { opacity: 1; } }
 
-        .result-container { margin-top: 30px; opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+        .result-container { margin-top: 20px; opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
         .result-container.visible { opacity: 1; transform: translateY(0); }
-        
-        .result-verdict { 
-            padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; 
-            transform: scale(0.95);
-            opacity: 0;
-            animation: popIn 0.5s 0.2s ease-out forwards;
-        }
-        .result-verdict h2 { margin: 0 0 10px 0; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        
-        .result-verdict h2 i {
-            display: inline-block;
-            animation: popIn 0.5s 0.4s ease-out forwards;
-            transform-origin: center;
-        }
-
+        .result-verdict { padding: 16px; border-radius: 10px; text-align: center; margin-bottom: 16px; transform: scale(0.95); opacity: 0; animation: popIn 0.5s 0.2s ease-out forwards; box-shadow: var(--shadow-sm); }
+        .result-verdict h2 { margin: 0 0 8px 0; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .result-verdict h2 i { display: inline-block; animation: popIn 0.5s 0.4s ease-out forwards; transform-origin: center; }
         .result-verdict p { margin: 0; font-size: 1rem; }
         .verdict-legitimate { background-color: var(--legitimate-bg); color: var(--legitimate-text); }
         .verdict-suspicious { background-color: var(--suspicious-bg); color: var(--suspicious-text); }
         .verdict-malicious { background-color: var(--malicious-bg); color: var(--malicious-text); }
-
-        .result-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .result-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+        .detail-box, .warning-item { background: rgba(248, 250, 252, 0.1); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); opacity: 0; transform: translateY(15px); animation: fadeInUp 0.5s ease-out forwards; transition: all 0.2s; }
+        body.dark-mode .detail-box, body.dark-mode .warning-item { background: rgba(15, 23, 42, 0.4); }
+        .result-container.visible .detail-box:nth-child(n), .modal-content .detail-box:nth-child(n) { animation-delay: calc(0.3s + 0.1s * var(--n)); }
+        .detail-box:hover, .warning-item:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .detail-box h4 { margin: 0 0 8px 0; color: var(--text-secondary); font-weight: 500; }
+        .detail-box p { margin: 0; font-weight: 600; font-size: 1.1rem; }
         
-        .detail-box, .warning-item { 
-            background: rgba(248, 250, 252, 0.7); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); 
-            opacity: 0;
-            transform: translateY(15px);
-            animation: fadeInUp 0.5s ease-out forwards;
-        }
-
-        .result-container.visible .result-details .detail-box:nth-child(1), .modal-content .result-details .detail-box:nth-child(1) { animation-delay: 0.3s; }
-        .result-container.visible .result-details .detail-box:nth-child(2), .modal-content .result-details .detail-box:nth-child(2) { animation-delay: 0.4s; }
-        .result-container.visible .result-details .detail-box:nth-child(3), .modal-content .result-details .detail-box:nth-child(3) { animation-delay: 0.5s; }
-        .result-container.visible .detail-box.analysis-details, .modal-content .detail-box.analysis-details { animation-delay: 0.6s; }
-        .result-container.visible .warning-item:nth-child(1), .modal-content .warning-item:nth-child(1) { animation-delay: 0.7s; }
-        .result-container.visible .warning-item:nth-child(2), .modal-content .warning-item:nth-child(2) { animation-delay: 0.8s; }
-        
-        .detail-box h4 { margin: 0 0 10px 0; color: var(--text-secondary); font-weight: 500; }
-        .detail-box p { margin: 0; font-weight: 600; font-size: 1.25rem; }
-        
-        .warning-item { margin-bottom: 15px; padding: 10px; }
-        .warning-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .warning-explanation { margin: 0; color: var(--text-secondary); font-size: 0.95rem; }
-        .news-analysis-container .detail-box p { font-size: 1.1rem; }
-        .news-analysis-container .reasoning { font-size: 1rem; line-height: 1.5; color: var(--text-secondary); }
-        
-        .feedback-container { margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(226, 232, 240, 0.7); text-align: center; opacity: 0; transform: translateY(15px); animation: fadeInUp 0.5s 1s ease-out forwards; }
-        .feedback-container p { margin: 0 0 15px 0; font-weight: 500; color: var(--text-secondary); }
-        .feedback-buttons button { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; cursor: pointer; margin: 0 5px; transition: background-color 0.2s, color 0.2s, transform 0.15s ease-out; gap: 8px; }
-        .feedback-buttons button:hover { background-color: rgba(248, 250, 252, 0.7); border-color: #ced6e0; transform: scale(1.05); }
-        .feedback-buttons button:active { transform: scale(0.98); }
-        .feedback-buttons button:disabled { cursor: not-allowed; opacity: 0.6; }
+        .feedback-container { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); text-align: center; opacity: 0; transform: translateY(15px); animation: fadeInUp 0.5s 1s ease-out forwards; }
+        .feedback-buttons { display: flex; justify-content: center; gap: 10px; }
+        .feedback-buttons button { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease-out; gap: 8px; display: flex; align-items: center; justify-content: center; font-weight: 500; }
+        .feedback-buttons button:hover { background-color: var(--surface); border-color: var(--primary); color: var(--primary); transform: scale(1.02); }
 
         .history-list, .community-highlights-list { list-style: none; padding: 0; margin: 0; }
-        .history-item, .community-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s, transform 0.2s ease-out; }
-        
-        .history-item:hover, .community-item:hover { 
-            background-color: rgba(248, 250, 252, 0.5);
-            transform: translateX(5px);
-         }
-
+        .history-item, .community-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s, transform 0.2s ease-out; border-radius: 6px; margin-bottom: 4px; }
+        .history-item:hover, .community-item:hover { background-color: rgba(96, 165, 250, 0.1); transform: translateX(3px); }
         .history-item.is-new { animation: slideInLeft 0.5s ease-out forwards; }
         .history-item:last-child, .community-item:last-child { border-bottom: none; }
         .history-item .url, .community-item .url { font-weight: 500; word-break: break-all; padding-right: 10px; }
-        .history-item .flag { font-weight: 600; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; white-space: nowrap; }
+        .flag { font-weight: 600; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; white-space: nowrap; }
         .flag.legitimate { background-color: var(--legitimate-bg); color: var(--legitimate-text); }
         .flag.suspicious { background-color: var(--suspicious-bg); color: var(--suspicious-text); }
         .flag.malicious { background-color: var(--malicious-bg); color: var(--malicious-text); }
-        .community-item .score { font-weight: 700; color: var(--malicious-text); font-size: 1.1rem; }
-        .community-item .url { font-family: 'Courier New', Courier, monospace; color: var(--malicious-text); }
-        
-        footer { text-align: center; padding: 20px 0; color: var(--text-secondary); margin-top: auto; }
 
-        /* --- NEW: Modal Styles --- */
+        .security-tips-list { list-style: none; padding: 0; margin: 0; }
+        .tip-item { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; padding: 12px; background: rgba(248, 250, 252, 0.5); border-radius: 8px; border-left: 3px solid var(--primary); }
+        body.dark-mode .tip-item { background: rgba(15, 23, 42, 0.5); }
+        .tip-item i { color: var(--primary); font-size: 1.1rem; padding-top: 4px; flex-shrink: 0; }
+        .tip-item p { margin: 0; line-height: 1.5; }
+        
+        footer { text-align: center; padding: 16px 0; color: var(--text-secondary); margin-top: auto; background: var(--surface); box-shadow: var(--shadow-sm); }
+
+        /* --- Modal Styles --- */
         .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(30, 41, 59, 0.6);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.8);
+            z-index: 1000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        
         .modal-container {
-            width: 90%;
-            max-width: 700px;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            background-color: rgba(255, 255, 255, 0.65);
-            -webkit-backdrop-filter: blur(16px);
-            backdrop-filter: blur(16px);
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            transform: scale(0.95);
-            transition: transform 0.3s ease;
+            width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative;
+            background-color: var(--surface); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color); transform: scale(0.95); transition: transform 0.3s ease;
         }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-overlay.active .modal-container {
-            transform: scale(1);
-        }
-
+        body.dark-mode .modal-container { background-color: rgba(30, 41, 59, 0.8); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-overlay.active .modal-container { transform: scale(1); }
         .modal-close-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(248, 250, 252, 0.7);
-            border: 1px solid var(--border-color);
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            font-size: 1rem;
-            transition: background-color 0.2s, transform 0.2s;
+            position: absolute; top: 12px; right: 12px; background: var(--surface);
+            border: 1px solid var(--border-color); border-radius: 50%; width: 28px; height: 28px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; color: var(--text-secondary);
+            font-size: 1rem; transition: background-color 0.2s, transform 0.2s;
         }
-        .modal-close-btn:hover {
-            background-color: rgba(226, 232, 240, 0.8);
-            transform: rotate(90deg);
-        }
+        .modal-close-btn:hover { background-color: var(--border-color); transform: rotate(90deg); }
 
+        #feedback-modal-content h3 { margin-top: 0; }
+        #feedback-modal-content .feedback-reason-group { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+        #feedback-modal-content label { display: block; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+        #feedback-modal-content input[type="radio"] { display: none; }
+        #feedback-modal-content input[type="radio"]:checked + label { background-color: var(--primary); color: white; border-color: var(--primary); }
+        #feedback-modal-content textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary); }
+        #submit-feedback-btn { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: background-color 0.2s; }
+        #submit-feedback-btn:hover { background-color: var(--primary-hover); }
+
+        .placeholder-text {
+            text-align: center; margin-top: 20px; color: var(--text-secondary); padding: 1rem; background: rgba(248, 250, 252, 0.5); border-radius: 8px;
+        }
+        body.dark-mode .placeholder-text { background: rgba(15, 23, 42, 0.5); }
+
+        #clearHistoryBtn {
+            background-color: var(--malicious-bg); color: var(--malicious-text); border: none; padding: 8px 16px;
+            border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; margin-bottom: 10px;
+            transition: background-color 0.2s; align-self: flex-end;
+        }
+        #clearHistoryBtn:hover { background-color: var(--malicious-text); color: white; }
     </style>
 </head>
 <body>
-    
     <header>
-        <h1>AwareLink Website Analysis Tool</h1>
+        <div class="header-actions">
+            <a href="/admin" class="admin-link-header"><i class="fa-solid fa-user-shield"></i> Admin</a>
+            <button class="dark-mode-toggle" id="darkModeToggle" aria-label="Toggle Dark Mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </div>
     </header>
-
     <div class="container">
         <!-- Main content column -->
         <div class="main-content">
+            <!-- NEW: Combined and Tabbed Analyzer Card -->
             <div class="analyzer-card">
-                <h2>Website Security Check</h2>
-                <div class="form-container">
-                    <input type="text" id="url" placeholder="Enter URL for analysis (e.g., example.com)" required>
-                    <button id="analyzeButton">
-                        <span id="button-text">Analyze</span>
-                        <span id="loader" class="loader" style="display: none;"></span>
+                <div class="tab-nav">
+                    <button class="tab-button active" data-tab="website-check-tab">
+                        <i class="fa-solid fa-globe"></i> Website Security Check
+                    </button>
+                    <button class="tab-button" data-tab="news-detector-tab">
+                        <i class="fa-solid fa-newspaper"></i> Fake News & Bias Detector
                     </button>
                 </div>
-                <div id="result-placeholder" style="text-align:center; margin-top: 30px; color: var(--text-secondary);">
-                    <p>Enter a URL above to check its safety.</p>
+
+                <!-- Website Security Check Content -->
+                <div id="website-check-tab" class="tab-content active">
+                    <div class="form-container">
+                        <input type="text" id="url" placeholder="Enter URL for analysis (e.g., example.com)" required>
+                        <button id="analyzeButton">
+                            <span id="button-text">Analyze</span>
+                            <span id="loader" class="loader" style="display: none;"></span>
+                        </button>
+                    </div>
+                    <div id="result-placeholder" class="placeholder-text">
+                        <p>Enter a URL above to check its safety.</p>
+                    </div>
+                    <div class="result-container" id="result"></div>
                 </div>
-                <div class="result-container" id="result"></div>
+
+                <!-- Fake News & Bias Detector Content -->
+                <div id="news-detector-tab" class="tab-content">
+                    <div class="form-container" style="flex-direction: column;">
+                        <textarea id="news-text" rows="6" placeholder="Paste news article text here..."></textarea>
+                        <button id="analyzeNewsButton" style="align-self: flex-end;">
+                            <span id="news-button-text">Analyze News</span>
+                            <span id="news-loader" class="loader" style="display: none;"></span>
+                        </button>
+                    </div>
+                    <div id="news-result-placeholder" class="placeholder-text">
+                        <p>Paste an article to check for fake news and bias.</p>
+                    </div>
+                    <div class="result-container" id="news-result"></div>
+                </div>
             </div>
+            <!-- END: Combined Card -->
 
             <div class="analyzer-card">
-                <h2>Fake News & Bias Detector</h2>
+                <h2 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-camera"></i> Screenshot Analysis</h2>
                 <div class="form-container" style="flex-direction: column;">
-                    <textarea id="news-text" rows="8" placeholder="Paste news article text here..."></textarea>
-                    <button id="analyzeNewsButton" style="align-self: flex-end;">
-                        <span id="news-button-text">Analyze News</span>
-                        <span id="news-loader" class="loader" style="display: none;"></span>
+                    <input type="file" id="screenshot-upload" accept="image/*">
+                    <label for="screenshot-upload" id="screenshot-upload-label">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span id="upload-label-text"> Click to Upload Screenshot</span>
+                    </label>
+                    <img id="screenshot-preview" src="" alt="Screenshot Preview"/>
+                    <button id="analyzeScreenshotButton" style="align-self: flex-end; margin-top: 10px;">
+                        <span id="screenshot-button-text">Analyze Screenshot</span>
+                        <span id="screenshot-loader" class="loader" style="display: none;"></span>
                     </button>
                 </div>
-                <div id="news-result-placeholder" style="text-align:center; margin-top: 30px; color: var(--text-secondary);">
-                    <p>Paste an article above to check for fake news and bias.</p>
+                <div id="screenshot-result-placeholder" class="placeholder-text">
+                    <p>Upload an image to check for visual threats.</p>
                 </div>
-                <div class="result-container" id="news-result"></div>
+                <div class="result-container" id="screenshot-result"></div>
             </div>
+            
+            <!-- Tech Security News Section -->
+            <div class="analyzer-card">
+                <h2 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-newspaper"></i> Tech Security News of the Week
+                </h2>
+                <div id="tech-security-news-container">
+                    <!-- News will be loaded here -->
+                </div>
+            </div>
+            
         </div>
-
         <!-- Sidebar column -->
         <div class="sidebar">
             <div class="analyzer-card">
-                <h2><i class="fa-solid fa-fire" style="color: var(--malicious-text);"></i> Community Threat Alerts</h2>
-                <div id="community-highlights-placeholder" style="color: var(--text-secondary);">
-                    <p>Latest high-risk websites reported by the community.</p>
+                <h2 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-fire" style="color: var(--malicious-text);"></i> Community Threat Alerts</h2>
+                <div id="community-highlights-placeholder" class="placeholder-text">
+                    <p>Loading latest high-risk reports...</p>
                 </div>
                 <div id="community-highlights-container" class="community-highlights-list"></div>
             </div>
 
             <div class="analyzer-card">
-                <h2><i class="fa-solid fa-clock-rotate-left"></i> Session History</h2>
-                <div id="history-placeholder" style="color: var(--text-secondary);">
+                <h2 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-clock-rotate-left"></i> Session History</h2>
+                <button id="clearHistoryBtn">Clear History</button>
+                <div id="history-placeholder" class="placeholder-text">
                     <p>Your recent scans will appear here.</p>
                 </div>
                 <div class="history-list" id="history-list-container"></div>
             </div>
-        </div>
-    </div>
-    
-    <footer>
-        <p>&copy; 2025 Website Analysis Tool | Powered by Flask</p>
-    </footer>
 
-    <!-- --- NEW: Modal HTML structure --- -->
-    <div class="modal-overlay" id="modal-overlay">
-        <div class="modal-container">
-            <button class="modal-close-btn" id="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
-            <div class="modal-content" id="modal-content">
-                <!-- Dynamic content will be injected here -->
+            <div class="analyzer-card">
+                <h2 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-lightbulb"></i> Quick Security Tips</h2>
+                <div class="security-tips-list">
+                    <div class="tip-item">
+                        <i class="fa-solid fa-check-double"></i>
+                        <p><strong>Verify the Domain:</strong> Always double-check the website address for typos or unusual characters.</p>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fa-solid fa-lock"></i>
+                        <p><strong>Look for HTTPS:</strong> A lock icon in the address bar means the connection is encrypted, but does not guarantee the site is safe.</p>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fa-solid fa-envelope"></i>
+                        <p><strong>Beware of Urgency:</strong> Phishing attacks often create a sense of panic. Be suspicious of urgent requests for personal info.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+   
+    <footer>
+        <p>&copy; 2025 AwareLink Analysis Tool | Powered by Flask & Gemini</p>
+    </footer>
 
+    <!-- All Modals -->
+    <div class="modal-overlay" id="details-modal-overlay">
+        <div class="modal-container">
+            <button class="modal-close-btn" id="details-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-content" id="details-modal-content"></div>
+        </div>
+    </div>
 
-    <script>
-        // --- SCRIPT START ---
-        const analyzeButton = document.getElementById("analyzeButton");
-        const buttonText = document.getElementById("button-text");
-        const loader = document.getElementById("loader");
-        const urlInput = document.getElementById("url");
-        const resultContainer = document.getElementById("result");
-        const resultPlaceholder = document.getElementById("result-placeholder");
-        const analyzeNewsButton = document.getElementById("analyzeNewsButton");
-        const newsButtonText = document.getElementById("news-button-text");
-        const newsLoader = document.getElementById("news-loader");
-        const newsTextInput = document.getElementById("news-text");
-        const newsResultContainer = document.getElementById("news-result");
-        const newsResultPlaceholder = document.getElementById("news-result-placeholder");
-        const historyListContainer = document.getElementById('history-list-container');
-        const historyPlaceholder = document.getElementById('history-placeholder');
-        const communityHighlightsContainer = document.getElementById('community-highlights-container');
-        let sessionHistory = [];
+    <div class="modal-overlay" id="feedback-modal-overlay">
+        <div class="modal-container">
+            <button class="modal-close-btn" id="feedback-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+            <div id="feedback-modal-content">
+                <h3>Why was this result inaccurate?</h3>
+                <div class="feedback-reason-group">
+                    <input type="radio" id="reason-safe" name="feedback_reason" value="marked_unsafe_but_was_safe">
+                    <label for="reason-safe">It was marked as unsafe, but it's actually a safe website.</label>
+                    <input type="radio" id="reason-unsafe" name="feedback_reason" value="marked_safe_but_was_unsafe">
+                    <label for="reason-unsafe">It was marked as safe, but it's a phishing/malicious site.</label>
+                    <input type="radio" id="reason-other" name="feedback_reason" value="other">
+                    <label for="reason-other">Other (please specify below)</label>
+                </div>
+                <textarea id="feedback-other-text" rows="4" placeholder="Optional: Provide more details..."></textarea>
+                <button id="submit-feedback-btn">Submit Feedback</button>
+            </div>
+        </div>
+    </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Element caching
+        const elements = {
+            analyzeButton: document.getElementById("analyzeButton"),
+            buttonText: document.getElementById("button-text"),
+            loader: document.getElementById("loader"),
+            urlInput: document.getElementById("url"),
+            resultContainer: document.getElementById("result"),
+            resultPlaceholder: document.getElementById("result-placeholder"),
+            analyzeNewsButton: document.getElementById("analyzeNewsButton"),
+            newsButtonText: document.getElementById("news-button-text"),
+            newsLoader: document.getElementById("news-loader"),
+            newsTextInput: document.getElementById("news-text"),
+            newsResultContainer: document.getElementById("news-result"),
+            newsResultPlaceholder: document.getElementById("news-result-placeholder"),
+            historyListContainer: document.getElementById('history-list-container'),
+            historyPlaceholder: document.getElementById('history-placeholder'),
+            communityHighlightsContainer: document.getElementById('community-highlights-container'),
+            clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+            screenshotUpload: document.getElementById('screenshot-upload'),
+            screenshotUploadLabel: document.getElementById('screenshot-upload-label'),
+            uploadLabelText: document.getElementById('upload-label-text'),
+            screenshotPreview: document.getElementById('screenshot-preview'),
+            analyzeScreenshotButton: document.getElementById('analyzeScreenshotButton'),
+            screenshotButtonText: document.getElementById('screenshot-button-text'),
+            screenshotLoader: document.getElementById('screenshot-loader'),
+            screenshotResultContainer: document.getElementById('screenshot-result'),
+            screenshotResultPlaceholder: document.getElementById('screenshot-result-placeholder'),
+            detailsModalOverlay: document.getElementById('details-modal-overlay'),
+            detailsModalContent: document.getElementById('details-modal-content'),
+            detailsModalCloseBtn: document.getElementById('details-modal-close-btn'),
+            feedbackModalOverlay: document.getElementById('feedback-modal-overlay'),
+            feedbackModalCloseBtn: document.getElementById('feedback-modal-close-btn'),
+            submitFeedbackBtn: document.getElementById('submit-feedback-btn'),
+            darkModeToggle: document.getElementById('darkModeToggle'),
+            techSecurityNewsContainer: document.getElementById('tech-security-news-container'),
+        };
 
-        // --- NEW: Modal elements ---
-        const modalOverlay = document.getElementById('modal-overlay');
-        const modalContent = document.getElementById('modal-content');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
-        
-        document.addEventListener('DOMContentLoaded', () => { loadCommunityHighlights(); });
-        
-        analyzeButton.addEventListener("click", handleAnalysis);
-        urlInput.addEventListener("keyup", (event) => { if (event.key === "Enter") handleAnalysis(); });
-        analyzeNewsButton.addEventListener("click", handleNewsAnalysis);
-        
-        // --- NEW: Modal close event listeners ---
-        modalCloseBtn.addEventListener('click', closeModal);
-        modalOverlay.addEventListener('click', (event) => {
-            if (event.target === modalOverlay) {
-                closeModal();
+        let sessionHistory = JSON.parse(localStorage.getItem('sessionHistory')) || [];
+        renderHistory();
+
+        let currentFeedbackUrl = null;
+        let currentFeedbackNewsText = null; // MODIFIED: Added this line
+
+        // --- NEW: TAB SWITCHING LOGIC ---
+        const tabContainer = document.querySelector('.tab-nav');
+        if (tabContainer) {
+            tabContainer.addEventListener('click', (e) => {
+                const clickedTab = e.target.closest('.tab-button');
+                if (!clickedTab || clickedTab.classList.contains('active')) return;
+
+                tabContainer.querySelector('.active').classList.remove('active');
+                clickedTab.classList.add('active');
+
+                document.querySelector('.tab-content.active').classList.remove('active');
+                const contentId = clickedTab.dataset.tab;
+                document.getElementById(contentId).classList.add('active');
+            });
+        }
+        // --- END: TAB LOGIC ---
+
+        // --- Event Listeners ---
+        elements.analyzeButton.addEventListener("click", handleAnalysis);
+        elements.urlInput.addEventListener("keyup", (event) => { if (event.key === "Enter") handleAnalysis(); });
+        elements.analyzeNewsButton.addEventListener("click", handleNewsAnalysis);
+        elements.analyzeScreenshotButton.addEventListener("click", handleScreenshotAnalysis);
+        elements.clearHistoryBtn.addEventListener("click", clearHistory);
+
+        elements.screenshotUpload.addEventListener('change', () => {
+            const file = elements.screenshotUpload.files[0];
+            if (file) {
+                elements.uploadLabelText.textContent = ` ${file.name}`;
+                elements.screenshotUploadLabel.classList.add('has-file');
+                elements.screenshotPreview.src = URL.createObjectURL(file);
+                elements.screenshotPreview.style.display = 'block';
             }
         });
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && modalOverlay.classList.contains('active')) {
-                closeModal();
+        
+        elements.detailsModalCloseBtn.addEventListener('click', closeDetailsModal);
+        elements.detailsModalOverlay.addEventListener('click', (e) => { if (e.target === elements.detailsModalOverlay) closeDetailsModal(); });
+        elements.feedbackModalCloseBtn.addEventListener('click', closeFeedbackModal);
+        elements.feedbackModalOverlay.addEventListener('click', (e) => { if (e.target === elements.feedbackModalOverlay) closeFeedbackModal(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (elements.detailsModalOverlay.classList.contains('active')) closeDetailsModal();
+                if (elements.feedbackModalOverlay.classList.contains('active')) closeFeedbackModal();
             }
         });
 
+        elements.submitFeedbackBtn.addEventListener('click', submitEnhancedFeedback);
+        elements.darkModeToggle.addEventListener('click', toggleDarkMode);
+        initializeTheme();
+        loadCommunityHighlights();
+        loadTechSecurityNews();
+
+        function loadTechSecurityNews() {
+            fetch('/api/tech-security-news')
+                .then(response => response.text())
+                .then(html => {
+                    elements.techSecurityNewsContainer.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error fetching tech security news:', error);
+                    elements.techSecurityNewsContainer.innerHTML = '<p>Could not load news.</p>';
+                });
+        }
+        
+        function initializeTheme() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                elements.darkModeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            } else {
+                document.body.classList.remove('dark-mode');
+                elements.darkModeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            }
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+            initializeTheme();
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear your session history?')) {
+                localStorage.removeItem('sessionHistory');
+                sessionHistory = [];
+                renderHistory();
+            }
+        }
 
         async function handleAnalysis() { 
-            const url = urlInput.value.trim(); 
+            const url = elements.urlInput.value.trim(); 
             if (!url) { alert("Please enter a URL."); return; } 
             
-            buttonText.textContent = "Analyzing..."; 
-            loader.style.display = 'block'; 
-            analyzeButton.disabled = true; 
-            resultPlaceholder.style.display = 'none'; 
-            resultContainer.classList.remove('visible');
-            resultContainer.innerHTML = '';
+            setLoadingState(elements.analyzeButton, elements.buttonText, elements.loader, true, "Analyzing...");
+            elements.resultPlaceholder.style.display = 'none'; 
+            elements.resultContainer.classList.remove('visible');
+            elements.resultContainer.innerHTML = '';
             
             try { 
                 const response = await fetch('/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url }), }); 
@@ -424,309 +533,371 @@
                 } 
                 const result = await response.json(); 
                 addToHistory(result); 
-                displayResult(result); 
+                displayResult(elements.resultContainer, result); 
             } catch (error) { 
-                displayError(error.message); 
+                displayError(elements.resultContainer, error.message); 
             } finally { 
-                buttonText.textContent = 'Analyze'; 
-                loader.style.display = 'none'; 
-                analyzeButton.disabled = false; 
+                setLoadingState(elements.analyzeButton, elements.buttonText, elements.loader, false, "Analyze");
             } 
         }
-        
-        function addToHistory(result) { 
-            // Prevent duplicate entries
-            const existingIndex = sessionHistory.findIndex(item => item.url === result.url);
-            if (existingIndex > -1) {
-                sessionHistory.splice(existingIndex, 1);
+
+        async function handleScreenshotAnalysis() {
+            const file = elements.screenshotUpload.files[0];
+            if (!file) {
+                alert("Please upload a screenshot file.");
+                return;
             }
-            sessionHistory.unshift(result); 
-            renderHistory(); 
-        }
-        
-        function renderHistory() { 
-            if (sessionHistory.length === 0) { 
-                historyPlaceholder.style.display = 'block'; 
-                historyListContainer.innerHTML = ''; 
-                return; 
-            } 
-            historyPlaceholder.style.display = 'none'; 
-            const oldHistory = historyListContainer.innerHTML;
-            historyListContainer.innerHTML = '';
+            setLoadingState(elements.analyzeScreenshotButton, elements.screenshotButtonText, elements.screenshotLoader, true, "Analyzing...");
+            elements.screenshotResultPlaceholder.style.display = 'none';
+            elements.screenshotResultContainer.classList.remove('visible');
+            elements.screenshotResultContainer.innerHTML = '';
             
-            sessionHistory.forEach((item, index) => { 
-                const historyItem = document.createElement('div'); 
-                historyItem.className = 'history-item'; 
-                if (index === 0 && oldHistory.length > 0) {
-                     historyItem.classList.add('is-new');
-                }
-                historyItem.innerHTML = ` <span class="url">${item.url}</span> <span class="flag ${item.flag}">${item.flag}</span> `; 
-                
-                // --- UPDATED: Click event opens modal ---
-                historyItem.addEventListener('click', () => { 
-                    openModal(item);
-                }); 
-                
-                historyListContainer.appendChild(historyItem); 
+            const formData = new FormData();
+            formData.append('screenshot', file);
 
-                if (historyItem.classList.contains('is-new')) {
-                    setTimeout(() => historyItem.classList.remove('is-new'), 500);
-                }
-            }); 
-        }
-        
-        /**
-         * Loads the community highlights by fetching data from the backend API.
-         */
-        async function loadCommunityHighlights() {
             try {
-                // Fetch threat data from the new API endpoint
-                const response = await fetch('/api/community-threats');
+                const response = await fetch('/analyze-screenshot', { method: 'POST', body: formData });
                 if (!response.ok) {
-                    throw new Error(`Network response error: ${response.statusText}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Screenshot analysis failed`);
                 }
-               
-                const threats = await response.json();
-                const placeholder = document.getElementById('community-highlights-placeholder');
-                if (!threats || threats.length === 0) {
-                    if(placeholder) placeholder.innerHTML = '<p>No high-risk threats reported recently. Stay vigilant!</p>';
-                    placeholder.style.display = 'block';
-                    communityHighlightsContainer.innerHTML = '';
-                    return;
-                }
-               
-                if (placeholder) placeholder.style.display = 'none';
-                 // Clear any existing dummy/old data container.
-                communityHighlightsContainer.innerHTML = '';
-
-                threats.forEach(item => {
-                    const communityItem = document.createElement('div');
-                    communityItem.className = 'community-item';
-                    communityItem.innerHTML = ` <span class="url">${item.url}</span> <span class="score">${item.score}/100</span> `;
-                    
-                    // --- NEW: Click event opens modal with dummy data ---
-                    communityItem.addEventListener('click', () => {
-                        const dummyResult = {
-                            url: item.url,
-                            flag: 'malicious',
-                            threat_score: item.score,
-                            domain_age_days: 'N/A',
-                            analysis_source: 'Community',
-                            warnings: ['This URL was identified as a high-risk threat by the community. Proceed with extreme caution.']
-                        };
-                        openModal(dummyResult);
-                    });
-
-                    communityHighlightsContainer.appendChild(communityItem);
-                });
+                const result = await response.json();
+                result.url = `Screenshot: ${file.name}`;
+                displayResult(elements.screenshotResultContainer, result);
             } catch (error) {
-                console.error('Error loading community highlights:', error);
-                const placeholder = document.getElementById('community-highlights-placeholder');
-                if (placeholder) {
-                    placeholder.innerHTML = '<p>Unable to load community threats at the moment. Please try again later.</p>';
-                }
+                displayError(elements.screenshotResultContainer, error.message);
+            } finally {
+                setLoadingState(elements.analyzeScreenshotButton, elements.screenshotButtonText, elements.screenshotLoader, false, "Analyze Screenshot");
             }
         }
-        
+
         async function handleNewsAnalysis() { 
-            const text = newsTextInput.value.trim(); 
+            const text = elements.newsTextInput.value.trim(); 
             if (!text) { alert("Please paste some news text to analyze."); return; } 
             
-            newsButtonText.textContent = "Analyzing..."; 
-            newsLoader.style.display = 'block'; 
-            analyzeNewsButton.disabled = true; 
-            newsResultPlaceholder.style.display = 'none'; 
-            newsResultContainer.classList.remove('visible'); 
-            newsResultContainer.innerHTML = '';
+            setLoadingState(elements.analyzeNewsButton, elements.newsButtonText, elements.newsLoader, true, "Analyzing...");
+            elements.newsResultPlaceholder.style.display = 'none'; 
+            elements.newsResultContainer.classList.remove('visible'); 
+            elements.newsResultContainer.innerHTML = '';
             
             try { 
                 const response = await fetch('/analyze-news', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text }), }); 
-                if (!response.ok) { 
-                    const errorData = await response.json(); 
-                    throw new Error(errorData.error || `News analysis failed with status ${response.status}`); 
-                } 
+                if (!response.ok) throw new Error((await response.json()).error);
                 const result = await response.json(); 
                 displayNewsResult(result); 
             } catch (error) { 
                 displayNewsError(error.message); 
             } finally { 
-                newsButtonText.textContent = 'Analyze News'; 
-                newsLoader.style.display = 'none'; 
-                analyzeNewsButton.disabled = false; 
+                setLoadingState(elements.analyzeNewsButton, elements.newsButtonText, elements.newsLoader, false, "Analyze News");
             } 
         }
 
-        function animateCountUp(element, finalValue, duration = 1500) {
-            let start = 0;
-            const end = parseInt(finalValue, 10) || 0;
-            if (end === 0) {
-                 element.textContent = '0';
-                 return;
-            }
-            const stepTime = Math.abs(Math.floor(duration / end));
-            const timer = setInterval(() => {
-                start += 1;
-                element.textContent = `${start}`;
-                if (start === end) {
-                    clearInterval(timer);
-                }
-            }, stepTime);
+        function addToHistory(result) { 
+            const existingIndex = sessionHistory.findIndex(item => item.url === result.url);
+            if (existingIndex > -1) sessionHistory.splice(existingIndex, 1);
+            sessionHistory.unshift(result); 
+            localStorage.setItem('sessionHistory', JSON.stringify(sessionHistory));
+            renderHistory(); 
         }
         
-        function displayError(errorMessage) { 
-            resultContainer.innerHTML = `<div class="result-verdict verdict-malicious"><h2><i class="fa-solid fa-circle-xmark"></i> Analysis Error</h2><p>${errorMessage}</p></div>`; 
-            resultContainer.classList.add('visible'); 
+        function renderHistory() { 
+            if (sessionHistory.length === 0) { 
+                elements.historyPlaceholder.style.display = 'block'; 
+                elements.historyListContainer.innerHTML = ''; 
+                return; 
+            } 
+            elements.historyPlaceholder.style.display = 'none'; 
+            const oldHistory = elements.historyListContainer.innerHTML;
+            elements.historyListContainer.innerHTML = '';
+            
+            sessionHistory.forEach((item, index) => { 
+                const historyItem = document.createElement('div'); 
+                historyItem.className = 'history-item'; 
+                if (index === 0 && oldHistory.length > 0) historyItem.classList.add('is-new');
+                historyItem.innerHTML = ` <span class="url">${item.url}</span> <span class="flag ${item.flag}">${item.flag}</span> `; 
+                historyItem.addEventListener('click', () => openDetailsModal(item)); 
+                elements.historyListContainer.appendChild(historyItem); 
+            }); 
+        }
+        
+        async function loadCommunityHighlights() {
+            try {
+                const response = await fetch('/api/community-threats');
+                if (!response.ok) throw new Error(`Network response error`);
+                const threats = await response.json();
+                const placeholder = document.getElementById('community-highlights-placeholder');
+                if (!threats || threats.length === 0) {
+                    if(placeholder) placeholder.innerHTML = '<p>No high-risk threats reported recently.</p>';
+                    return;
+                }
+                if (placeholder) placeholder.style.display = 'none';
+                elements.communityHighlightsContainer.innerHTML = '';
+                threats.forEach(item => {
+                    const communityItem = document.createElement('div');
+                    communityItem.className = 'community-item';
+                    communityItem.innerHTML = `<span class="url">${item.url}</span>`;
+                    communityItem.addEventListener('click', () => {
+                        const dummyResult = {
+                            url: item.url, flag: 'malicious', threat_score: item.score,
+                            analysis_source: 'Community',
+                            warnings: ['This URL was identified as a high-risk threat by the community.']
+                        };
+                        openDetailsModal(dummyResult);
+                    });
+                    elements.communityHighlightsContainer.appendChild(communityItem);
+                });
+            } catch (error) {
+                console.error('Error loading community highlights:', error);
+                document.getElementById('community-highlights-placeholder').innerHTML = '<p>Could not load community threats.</p>';
+            }
+        }
+
+        function setLoadingState(button, buttonText, loader, isLoading, text) {
+            buttonText.textContent = text;
+            loader.style.display = isLoading ? 'block' : 'none';
+            button.disabled = isLoading;
+        }
+
+        function displayError(container, errorMessage) { 
+            container.innerHTML = `<div class="result-verdict verdict-malicious"><h2><i class="fa-solid fa-circle-xmark"></i> Analysis Error</h2><p>${errorMessage}</p></div>`; 
+            container.classList.add('visible'); 
         }
         
         function displayNewsError(errorMessage) { 
-            newsResultContainer.innerHTML = `<div class="result-verdict verdict-malicious"><h2><i class="fa-solid fa-circle-xmark"></i> Analysis Error</h2><p>${errorMessage}</p></div>`; 
-            newsResultContainer.classList.add('visible'); 
+            elements.newsResultContainer.innerHTML = `<div class="result-verdict verdict-malicious"><h2><i class="fa-solid fa-circle-xmark"></i> Analysis Error</h2><p>${errorMessage}</p></div>`; 
+            elements.newsResultContainer.classList.add('visible'); 
         }
-        
-        function translateWarning(warning) { let translation = { title: "Community Report", explanation: warning }; if (warning.startsWith("Uses IP address")) { translation = { title: "Uses a Direct IP Address", explanation: "Legitimate websites use a domain name (like google.com), not a numerical IP address. This is a major red flag for phishing." }; } else if (warning.startsWith("Contains '@' symbol")) { translation = { title: "Contains '@' Symbol", explanation: "This may be an attempt to embed credentials in the URL, a common phishing trick to steal login information." }; } else if (warning.startsWith("Excessive hyphens")) { translation = { title: "Too Many Hyphens in Address", explanation: "Scammers often use hyphens to mimic legitimate sites (e.g., 'your-bank-online-security.com'). Too many is a sign of deception." }; } else if (warning.startsWith("Suspicious TLD")) { const tld = warning.split(':')[1] ? warning.split(':')[1].trim() : ''; translation = { title: "Uncommon or Risky Domain Ending", explanation: `The website uses the '${tld}' domain ending, which is cheap and popular with scammers for creating throwaway websites.` }; } else if (warning.startsWith("Excessively long domain name")) { translation = { title: "Excessively Long Domain Name", explanation: "Very long domain names are often used to confuse users and hide malicious intent." }; } else if (warning.startsWith("Too many subdomains")) { translation = { title: "Too Many Subdomains", explanation: "Excessive subdomains can be used to deceive users into thinking it's a legitimate nested site." }; } else if (warning.startsWith("Contains sensitive/trigger keywords")) { translation = { title: "Suspicious Keywords in Domain", explanation: "Words like 'login', 'secure', or 'banking' in the domain may indicate an attempt to impersonate trusted services." }; } else if (warning.startsWith("Suspicious subdomain usage")) { translation = { title: "Suspicious Subdomain Pattern", explanation: "This matches known scam patterns, such as fake government or subsidy sites." }; } else if (warning.startsWith("New domain")) { const age = warning.match(/\d+/) ? warning.match(/\d+/)[0] : 'a few'; translation = { title: "Very New Website", explanation: `This website was registered only ${age} days ago. Scammers create new sites constantly, so a new domain is a sign of higher risk.` }; } else if (warning.startsWith("Invalid or expiring SSL")) { translation = { title: "Invalid or Expiring SSL Certificate", explanation: "The site's security certificate is invalid or about to expire, which can expose your data to interception." }; } else if (warning.startsWith("No HTTPS")) { translation = { title: "Insecure Connection (No HTTPS)", explanation: "This site does not use basic encryption. Any information you send (passwords, credit cards) can be easily stolen." }; } else if (warning.startsWith("Missing security headers")) { translation = { title: "Missing Modern Security Features", explanation: "The website is missing standard security features that protect visitors from common attacks like clickjacking." }; } else if (warning.startsWith("Excessive hidden elements")) { translation = { title: "Excessive Hidden Elements", explanation: "Too many hidden parts on the page could be hiding malicious code or deceptive content." }; } else if (warning.startsWith("Multiple iframes")) { translation = { title: "Multiple Iframes Detected", explanation: "Excessive iframes can be used to embed harmful content from other sites without your knowledge." }; } else if (warning.startsWith("Could not determine domain age")) { translation = { title: "Unknown Domain Age", explanation: "We couldn't retrieve the registration date, which makes it harder to assess trustworthiness." }; } else if (warning === "Looks normal") { translation = { title: "URL Structure Normal", explanation: "The website's address doesn't show any common signs of deception." }; } return translation; }
-        
-        // --- NEW: Reusable function to generate result HTML ---
+
         function generateResultHTML(result) {
             let verdictClass = '', verdictIcon = '', verdictText = result.flag.charAt(0).toUpperCase() + result.flag.slice(1); 
             if (result.flag === 'legitimate') { verdictClass = 'verdict-legitimate'; verdictIcon = '<i class="fa-solid fa-shield-halved"></i>'; } 
             else if (result.flag === 'suspicious') { verdictClass = 'verdict-suspicious'; verdictIcon = '<i class="fa-solid fa-triangle-exclamation"></i>'; } 
             else { verdictClass = 'verdict-malicious'; verdictIcon = '<i class="fa-solid fa-ban"></i>'; } 
             
-            let warningsHTML = '<div class="warning-item"><div class="warning-header"><h4><i class="fa-solid fa-check-circle" style="color: var(--legitimate-text);"></i> All Clear</h4></div><p class="warning-explanation">No specific warnings were triggered based on our analysis.</p></div>'; 
-            if (result.warnings && result.warnings.length > 0) { 
-                warningsHTML = ''; 
-                result.warnings.forEach(rawWarning => { 
-                    const translated = translateWarning(rawWarning); 
-                    warningsHTML += `<div class="warning-item"><div class="warning-header"><i class="fa-solid fa-triangle-exclamation"></i><h4>${translated.title}</h4></div><p class="warning-explanation">${translated.explanation}</p></div>`; 
-                }); 
-            } 
+            let warningsHTML = result.warnings && result.warnings.length > 0
+                ? result.warnings.map(w => `<div class="warning-item"><div class="warning-header"><i class="fa-solid fa-triangle-exclamation"></i><h4>${w.title || 'Warning'}</h4></div><p class="warning-explanation">${w.explanation || w}</p></div>`).join('')
+                : '<div class="warning-item"><div class="warning-header"><h4><i class="fa-solid fa-check-circle" style="color: var(--legitimate-text);"></i> All Clear</h4></div><p class="warning-explanation">No specific warnings were triggered.</p></div>';
             
+            const detailsGrid = `
+                <div class="result-details">
+                    <div class="detail-box" style="--n: 0"><h4>Risk Score</h4><p><span class="score-value">0</span>/100</p></div>
+                    ${result.domain_age_days !== undefined ? `<div class="detail-box" style="--n: 1"><h4>Website Age</h4><p>${result.domain_age_days !== null ? result.domain_age_days + ' days' : 'Unknown'}</p></div>` : ''}
+                    <div class="detail-box" style="--n: 2"><h4>Analysis Source</h4><p>${result.analysis_source.toUpperCase()}</p></div>
+                </div>`;
+
             return `
                 <div class="result-verdict ${verdictClass}">
-                    <h2>${verdictIcon} This Website is Potentially <strong>${verdictText}</strong></h2>
+                    <h2>${verdictIcon} This is Potentially <strong>${verdictText}</strong></h2>
                     <p>Analysis for: <strong>${result.url}</strong></p>
                 </div>
-                <div class="result-details">
-                    <div class="detail-box">
-                        <h4>Risk Score</h4>
-                        <p><span class="score-value">0</span>/100</p>
-                    </div>
-                    <div class="detail-box">
-                        <h4>Website Age</h4>
-                        <p>${result.domain_age_days !== null && result.domain_age_days !== undefined ? result.domain_age_days + ' days' : 'Unknown'}</p>
-                    </div>
-                    <div class="detail-box">
-                        <h4>Analysis Source</h4>
-                        <p>${result.analysis_source.toUpperCase()}</p>
-                    </div>
-                </div>
+                ${!result.url.startsWith("Screenshot:") ? detailsGrid : ''}
                 <div class="detail-box analysis-details" style="margin-top: 20px;">
                     <h3 style="margin: 0 0 15px 0;"><i class="fa-solid fa-list-check"></i> Analysis Details</h3>
                     ${warningsHTML}
                 </div>`;
         }
-
-        function displayResult(result) { 
-            const feedbackHTML = `<div class="feedback-container" id="feedback-for-${result.url.replace(/[^a-zA-Z0-9]/g, '')}"><p>Was this analysis accurate?</p><div class="feedback-buttons"><button onclick="handleFeedback(true, '${result.url}')"><i class="fa-solid fa-thumbs-up"></i> Accurate</button><button onclick="handleFeedback(false, '${result.url}')"><i class="fa-solid fa-thumbs-down"></i> Inaccurate</button></div></div>`; 
+        
+        function displayResult(container, result) { 
+            const shareId = result.share_id;
             
-            resultContainer.innerHTML = generateResultHTML(result) + feedbackHTML;
-            resultContainer.classList.add('visible'); 
+            const shareButtonHTML = shareId ? `
+                <button id="share-btn-${shareId}" onclick="copyShareLink('${shareId}')">
+                    <i class="fa-solid fa-share-nodes"></i> Share Result
+                </button>` : '';
 
-            const scoreElement = resultContainer.querySelector('.score-value');
-            if (scoreElement) {
-                const score = result.threat_score !== undefined ? result.threat_score : 0;
-                animateCountUp(scoreElement, score);
-            }
+            const feedbackHTML = `
+                <div class="feedback-container" id="feedback-for-${result.url.replace(/[^a-zA-Z0-9]/g, '')}">
+                    <p>Was this analysis accurate?</p>
+                    <div class="feedback-buttons">
+                        <button onclick="handleFeedback(true, '${result.url}')"><i class="fa-solid fa-thumbs-up"></i> Accurate</button>
+                        <button onclick="handleFeedback(false, '${result.url}')"><i class="fa-solid fa-thumbs-down"></i> Inaccurate</button>
+                        ${shareButtonHTML}
+                    </div>
+                </div>`; 
+            
+            container.innerHTML = generateResultHTML(result) + (result.url.startsWith("Screenshot:") ? '' : feedbackHTML);
+            container.classList.add('visible'); 
+
+            const scoreElement = container.querySelector('.score-value');
+            if (scoreElement) animateCountUp(scoreElement, result.threat_score || 0);
+        }
+
+        function copyShareLink(shareId) {
+            const link = window.location.origin + '/analysis/' + shareId;
+            navigator.clipboard.writeText(link).then(() => {
+                const button = document.getElementById('share-btn-' + shareId);
+                if (button) {
+                    button.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Share Result';
+                    }, 2500);
+                }
+            }).catch(err => {
+                console.error('Failed to copy link: ', err);
+                alert('Failed to copy link.');
+            });
         }
         
-        /**
-         * NEW: Sends user feedback on scan accuracy to the server.
-         * @param {boolean} isAccurate - Whether the user found the analysis accurate
-         * @param {string} url - The URL analyzed
-         */
-        async function handleFeedback(isAccurate, url) {
-            console.log(`Feedback received for ${url}: ${isAccurate ? 'Accurate' : 'Inaccurate'}`);
-            const feedbackContainerId = `feedback-for-${url.replace(/[^a-zA-Z0-9]/g, '')}`;
-            const feedbackContainer = document.getElementById(feedbackContainerId);
-            if (feedbackContainer) {
-                feedbackContainer.innerHTML = `<p>Submitting feedback...</p>`;
-            }
-            try {
-                const response = await fetch('/api/feedback', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accurate: isAccurate, url: url })
-                });
-                if (!response.ok) {
-                    throw new Error(`Failed to submit feedback: ${response.statusText}`);
-                }
-                const data = await response.json();
-                if (data.status === 'success') {
-                    if (feedbackContainer) {
-                        feedbackContainer.innerHTML = `<p style="opacity:0; animation: fadeInUp 0.5s forwards;">Thank you for your feedback!</p>`;
-                    }
-                } else {
-                    throw new Error(data.message || 'Unknown error');
-                }
-            } catch (error) {
-                console.error('Feedback submission error:', error);
-                if (feedbackContainer) {
-                    feedbackContainer.innerHTML = `<p style="opacity:0; animation: fadeInUp 0.5s forwards;">Feedback submission failed. Please try again.</p>`;
-                }
-            }
-        }
-        
+        // MODIFIED: This function is updated
         function displayNewsResult(result) { 
-            let scoreColorClass = ''; 
-            if (result.fake_news_score < 40) { scoreColorClass = 'verdict-legitimate'; } 
-            else if (result.fake_news_score < 70) { scoreColorClass = 'verdict-suspicious'; } 
-            else { scoreColorClass = 'verdict-malicious'; } 
+            let scoreColorClass = result.fake_news_score < 40 ? 'verdict-legitimate' : result.fake_news_score < 70 ? 'verdict-suspicious' : 'verdict-malicious';
             
-            newsResultContainer.innerHTML = `
+            const originalText = elements.newsTextInput.value.trim();
+
+            const feedbackHTML = `
+                <div class="feedback-container" id="feedback-for-news">
+                    <p>Was this analysis accurate?</p>
+                    <div class="feedback-buttons">
+                        <button onclick="handleNewsFeedback(true, \`${encodeURIComponent(originalText)}\`)"><i class="fa-solid fa-thumbs-up"></i> Accurate</button>
+                        <button onclick="handleNewsFeedback(false, \`${encodeURIComponent(originalText)}\`)"><i class="fa-solid fa-thumbs-down"></i> Inaccurate</button>
+                    </div>
+                </div>`; 
+
+            elements.newsResultContainer.innerHTML = `
                 <div class="news-analysis-container">
                     <div class="result-details">
-                        <div class="detail-box ${scoreColorClass}">
-                            <h4>Fake News Score</h4>
-                            <p><span class="score-value">0</span>/100</p>
-                        </div>
-                        <div class="detail-box">
-                            <h4>Political Bias</h4>
-                            <p>${result.political_bias || 'N/A'}</p>
-                        </div>
+                        <div class="detail-box ${scoreColorClass}" style="--n: 0"><h4>Fake News Score</h4><p><span class="score-value">0</span>/100</p></div>
+                        <div class="detail-box" style="--n: 1"><h4>Political Bias</h4><p>${result.political_bias || 'N/A'}</p></div>
                     </div>
                     <div class="detail-box analysis-details" style="margin-top: 20px;">
                         <h3 style="margin: 0 0 15px 0;"><i class="fa-solid fa-lightbulb"></i> Reasoning</h3>
                         <p class="reasoning">${result.reasoning || 'No reasoning provided.'}</p>
                     </div>
-                </div>`; 
+                </div>
+                ${feedbackHTML}`; 
             
-            newsResultContainer.classList.add('visible'); 
-            const scoreElement = newsResultContainer.querySelector('.score-value');
-            if(scoreElement) {
-                const score = result.fake_news_score !== undefined ? result.fake_news_score : 0;
-                animateCountUp(scoreElement, score);
+            elements.newsResultContainer.classList.add('visible'); 
+            animateCountUp(elements.newsResultContainer.querySelector('.score-value'), result.fake_news_score || 0);
+        }
+        
+        function animateCountUp(element, finalValue, duration = 1500) {
+            let start = 0;
+            const end = parseInt(finalValue, 10) || 0;
+            if (end === 0) { element.textContent = '0'; return; }
+            const stepTime = Math.abs(Math.floor(duration / end));
+            const timer = setInterval(() => {
+                start += 1;
+                element.textContent = `${start}`;
+                if (start >= end) clearInterval(timer);
+            }, stepTime);
+        }
+
+        window.handleFeedback = function(isAccurate, url) {
+            if (isAccurate) {
+                submitSimpleFeedback(true, url);
+            } else {
+                currentFeedbackUrl = url;
+                openFeedbackModal();
             }
         }
         
-        // --- NEW: Modal control functions ---
-        function openModal(result) {
-            modalContent.innerHTML = generateResultHTML(result);
-            document.body.classList.add('modal-open');
-            modalOverlay.classList.add('active');
-
-            const scoreElement = modalContent.querySelector('.score-value');
-            if (scoreElement) {
-                const score = result.threat_score !== undefined ? result.threat_score : 0;
-                // Use a shorter animation for the modal so it feels responsive
-                animateCountUp(scoreElement, score, 800);
+        // MODIFIED: This new function block is added
+        window.handleNewsFeedback = function(isAccurate, encodedText) {
+            const text = decodeURIComponent(encodedText);
+            if (isAccurate) {
+                submitSimpleNewsFeedback(true, text);
+            } else {
+                currentFeedbackNewsText = text;
+                openFeedbackModal();
             }
         }
 
-        function closeModal() {
-            document.body.classList.remove('modal-open');
-            modalOverlay.classList.remove('active');
+        async function submitSimpleNewsFeedback(isAccurate, text) {
+            const feedbackContainer = document.getElementById(`feedback-for-news`);
+            if (feedbackContainer) feedbackContainer.innerHTML = `<p>Thank you for your feedback!</p>`;
+            try {
+                await fetch('/api/feedback/news', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accurate: isAccurate, text: text })
+                });
+            } catch (error) { console.error('News feedback submission error:', error); }
         }
 
-    </script>
+        async function submitSimpleFeedback(isAccurate, url) {
+            const feedbackContainer = document.getElementById(`feedback-for-${url.replace(/[^a-zA-Z0-9]/g, '')}`);
+            if (feedbackContainer) feedbackContainer.innerHTML = `<p>Thank you for your feedback!</p>`;
+            try {
+                await fetch('/api/feedback', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accurate: isAccurate, url: url })
+                });
+            } catch (error) { console.error('Feedback submission error:', error); }
+        }
+
+        // MODIFIED: This function is updated to handle both URL and News feedback
+        async function submitEnhancedFeedback() {
+            const reasonRadio = document.querySelector('input[name="feedback_reason"]:checked');
+            if (!reasonRadio) {
+                alert("Please select a reason.");
+                return;
+            }
+            const reason = reasonRadio.value;
+            const otherText = document.getElementById('feedback-other-text').value.trim();
+            
+            closeFeedbackModal();
+            
+            let endpoint = '';
+            let payload = {};
+            let feedbackContainer;
+
+            if (currentFeedbackUrl) { // Handle website feedback
+                endpoint = '/api/feedback';
+                payload = { accurate: false, url: currentFeedbackUrl, reason: reason, other_text: otherText };
+                feedbackContainer = document.getElementById(`feedback-for-${currentFeedbackUrl.replace(/[^a-zA-Z0-9]/g, '')}`);
+
+            } else if (currentFeedbackNewsText) { // Handle news feedback
+                endpoint = '/api/feedback/news';
+                payload = { accurate: false, text: currentFeedbackNewsText, reason: reason, other_text: otherText };
+                feedbackContainer = document.getElementById(`feedback-for-news`);
+            } else {
+                return; // Nothing to submit
+            }
+
+            if (feedbackContainer) {
+                feedbackContainer.innerHTML = `<p>Thank you for your detailed feedback!</p>`;
+            }
+            
+            try {
+                await fetch(endpoint, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) { 
+                console.error('Enhanced feedback submission error:', error); 
+            } finally {
+                // Clear both context variables after submission
+                currentFeedbackUrl = null;
+                currentFeedbackNewsText = null;
+            }
+        }
+
+        function openDetailsModal(result) {
+            elements.detailsModalContent.innerHTML = generateResultHTML(result);
+            document.body.classList.add('modal-open');
+            elements.detailsModalOverlay.classList.add('active');
+            const scoreElement = elements.detailsModalContent.querySelector('.score-value');
+            if (scoreElement) animateCountUp(scoreElement, result.threat_score || 0, 800);
+        }
+
+        function closeDetailsModal() {
+            document.body.classList.remove('modal-open');
+            elements.detailsModalOverlay.classList.remove('active');
+        }
+
+        function openFeedbackModal() {
+            document.body.classList.add('modal-open');
+            elements.feedbackModalOverlay.classList.add('active');
+        }
+
+        function closeFeedbackModal() {
+            document.body.classList.remove('modal-open');
+            elements.feedbackModalOverlay.classList.remove('active');
+            // Reset the form for the next use
+            const checkedRadio = document.querySelector('input[name="feedback_reason"]:checked');
+            if(checkedRadio) checkedRadio.checked = false;
+            document.getElementById('feedback-other-text').value = '';
+        }
+    });
+</script>
 </body>
 </html>

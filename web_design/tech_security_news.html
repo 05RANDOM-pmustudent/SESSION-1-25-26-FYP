@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Security News</title>
+    <style>
+        @keyframes slideInUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .news-carousel-container {
+            display: flex;
+            gap: 1rem;
+            padding: 0.25rem;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) var(--surface);
+        }
+
+        .news-carousel-container::-webkit-scrollbar { height: 8px; }
+        .news-carousel-container::-webkit-scrollbar-track { background: var(--surface); border-radius: 4px; }
+        .news-carousel-container::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 4px; }
+        .news-carousel-container::-webkit-scrollbar-thumb:hover { background-color: var(--primary); }
+
+        .news-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            flex: 0 0 300px;
+            scroll-snap-align: start;
+            animation: slideInUp 0.6s ease-out forwards;
+            opacity: 0;
+            animation-delay: calc(0.1s * var(--i));
+        }
+        
+        @media (max-width: 768px) {
+            .news-card-link { flex: 0 0 80%; }
+        }
+
+        .news-card {
+            position: relative;
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .news-card-link:hover .news-card {
+            transform: scale(1.03);
+            box-shadow: var(--shadow-lg); /* You might want to define --shadow-lg */
+        }
+
+        .news-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 10%, rgba(0, 0, 0, 0) 60%);
+            transition: background 0.3s ease;
+        }
+
+        .news-card-link:hover .news-card::before {
+             background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 20%, rgba(0, 0, 0, 0.1) 70%);
+        }
+
+        .news-card-content {
+            position: relative; /* To be on top of the pseudo-element */
+            z-index: 2;
+            padding: 1.25rem;
+            color: #ffffff;
+        }
+
+        .news-card-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.4;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+        }
+
+        .news-card-source {
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0.8;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="news-carousel-container">
+        {% for item in news_items %}
+        <a href="{{ item.link }}" target="_blank" rel="noopener noreferrer" class="news-card-link" style="--i: {{ loop.index0 }};">
+            <div class="news-card" style="background-image: url('{{ item.image }}');">
+                <div class="news-card-content">
+                    <h3 class="news-card-title">{{ item.title }}</h3>
+                    <p class="news-card-source">{{ item.source }}</p>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</body>
+</html>

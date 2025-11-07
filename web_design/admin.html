@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AwareLink</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --background: #f0f4f8; --surface: #ffffff; --primary: #3b82f6;
+            --primary-hover: #2563eb; --text-primary: #1e293b; --text-secondary: #64748b;
+            --border-color: #e2e8f0; --legitimate-bg: #e0fbe0; --legitimate-text: #166534;
+            --suspicious-bg: #fffbe0; --suspicious-text: #a16207; --malicious-bg: #ffe0e0;
+            --malicious-text: #be123c;
+        }
+        body.dark-mode {
+            --background: #0f172a; --surface: #1e293b; --primary: #60a5fa;
+            --primary-hover: #3b82f6; --text-primary: #e2e8f0; --text-secondary: #94a3b8;
+            --border-color: #334155; --legitimate-bg: rgba(34, 197, 94, 0.15);
+            --legitimate-text: #4ade80; --suspicious-bg: rgba(234, 179, 8, 0.15);
+            --suspicious-text: #facc15; --malicious-bg: rgba(239, 68, 68, 0.15);
+            --malicious-text: #f87171;
+        }
+        body { font-family: 'Inter', sans-serif; margin: 0; background-color: var(--background); color: var(--text-primary); min-height: 100vh; }
+        header { padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 1.75rem; font-weight: 600; }
+        .header-actions { display: flex; align-items: center; gap: 1rem; }
+        .home-link-header {
+             text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 500;
+            background-color: var(--surface); color: var(--text-primary); border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        .home-link-header:hover { background-color: var(--background); }
+        .dark-mode-toggle {
+            background: var(--surface); border: 1px solid var(--border-color); color: var(--text-primary);
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; font-size: 1.2rem; transition: all 0.2s;
+        }
+        .container {
+            width: 100%; max-width: 1600px; margin: 20px auto; padding: 0 20px;
+            display: grid; grid-template-columns: 1fr; gap: 2rem;
+        }
+        @media (min-width: 1200px) { .container { grid-template-columns: minmax(400px, 1fr) 2fr; } }
+        .sidebar, .main-content { display: flex; flex-direction: column; gap: 2rem; min-width: 0; }
+        .admin-card {
+            background-color: var(--surface); backdrop-filter: blur(16px); padding: 2rem;
+            border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color);
+        }
+        .admin-card h2 { margin-top: 0; display: flex; align-items: center; gap: 10px; }
+        .table-container { max-height: 500px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); word-wrap: break-word; }
+        th { background-color: var(--background); font-weight: 600; position: sticky; top: 0; z-index: 1; cursor: pointer; }
+        tr:hover { background-color: rgba(96, 165, 250, 0.1); }
+        .flag { font-weight: 600; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; white-space: nowrap; }
+        .flag.legitimate { background-color: var(--legitimate-bg); color: var(--legitimate-text); }
+        .flag.suspicious { background-color: var(--suspicious-bg); color: var(--suspicious-text); }
+        .flag.malicious { background-color: var(--malicious-bg); color: var(--malicious-text); }
+        .feedback-accurate { color: var(--legitimate-text); font-weight: bold; }
+        .feedback-inaccurate { color: var(--malicious-text); font-weight: bold; }
+        
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
+        .search-input { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--background); color: var(--text-primary); }
+        .date-filters { display: flex; align-items: center; gap: 10px; }
+        .date-filters input { padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary); }
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; background: var(--primary); color: white; transition: background-color 0.2s; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn:disabled { background-color: var(--border-color); cursor: not-allowed; }
+        .btn-secondary { background: var(--surface); color: var(--text-primary); border: 1px solid var(--border-color); }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-item { padding: 1.5rem; border-radius: 12px; text-align: center; background-color: var(--background); }
+        .stat-item h4 { margin: 0 0 5px 0; color: var(--text-secondary); font-weight: 500; }
+        .stat-item p { margin: 0; font-size: 2rem; font-weight: 700; }
+        
+        .chart-container { position: relative; height: 300px; width: 100%; margin-top: 20px; }
+        .btn-delete { background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1rem; padding: 5px 10px; border-radius: 6px; transition: all 0.2s ease; }
+        .btn-delete:hover { color: var(--malicious-text); background-color: var(--malicious-bg); }
+
+        .pagination-controls {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 1rem; border-top: 1px solid var(--border-color); margin-top: 1rem;
+        }
+        .pagination-info { font-size: 0.9rem; color: var(--text-secondary); }
+        .pagination-buttons { display: flex; gap: 0.5rem; }
+
+        /* New CSS for row animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .anim-row-in {
+            animation: fadeInUp 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Admin Dashboard</h1>
+        <div class="header-actions">
+            <a href="/" class="home-link-header"><i class="fa-solid fa-arrow-left"></i> Back to Analyzer</a>
+            <button class="dark-mode-toggle" id="darkModeToggle" aria-label="Toggle Dark Mode"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+    <div class="container">
+        <div class="sidebar">
+            <div class="admin-card">
+                <h2><i class="fa-solid fa-chart-pie"></i> Stats Overview</h2>
+                <div class="stats-grid" id="stats-summary">
+                    <div class="stat-item"><h4>Total Scans</h4><p id="total-scans">0</p></div>
+                    <div class="stat-item"><h4>Avg. Score</h4><p id="avg-score">0.0</p></div>
+                </div>
+                <div class="chart-container"><canvas id="flagChart"></canvas></div>
+            </div>
+            <div class="admin-card">
+                <h2><i class="fa-solid fa-comments"></i> User Feedback</h2>
+                <p>All user feedback for website and news analysis is now available on a dedicated dashboard.</p>
+                <a href="/admin/feedback" class="btn" style="text-decoration: none; display: inline-block; margin-top: 10px;">
+                    View Feedback Dashboard
+                </a>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="admin-card">
+                <h2><i class="fa-solid fa-shield-halved"></i> Recent Analyses</h2>
+                <div class="action-bar">
+                    <input type="text" class="search-input" id="analyses-search" placeholder="Search by URL...">
+                    <div class="date-filters">
+                        <input type="date" id="start-date">
+                        <input type="date" id="end-date">
+                        <button class="btn" onclick="applyFilters()">Filter / Search</button>
+                        <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="analyses-table">
+                        <thead><tr>
+                            <th style="width: 35%;" data-sort="url">URL</th>
+                            <th style="width: 15%;" data-sort="flag">Flag</th>
+                            <th style="width: 10%;" data-sort="threat_score">Score</th>
+                            <th style="width: 15%;">Source</th>
+                            <th style="width: 15%;" data-sort="analysis_timestamp">Timestamp</th>
+                            <th style="width: 10%;">Actions</th>
+                        </tr></thead>
+                        <tbody id="analyses-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls" id="pagination-controls-container"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentAnalysesData = [];
+        let flagChart;
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentSort = { column: 'analysis_timestamp', order: 'desc' };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardData();
+            initializeTheme();
+            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+            
+            document.querySelectorAll('#analyses-table th[data-sort]').forEach(header => {
+                header.addEventListener('click', () => {
+                    const sortColumn = header.dataset.sort;
+                    const order = (currentSort.column === sortColumn && currentSort.order === 'asc') ? 'desc' : 'asc';
+                    currentSort = { column: sortColumn, order: order };
+                    sortAndRenderAnalyses();
+                });
+            });
+        });
+
+        function initializeTheme() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').innerHTML = '<i class="fa-solid fa-sun"></i>';
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('darkModeToggle').innerHTML = '<i class="fa-solid fa-moon"></i>';
+            }
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            initializeTheme();
+            loadGlobalStats();
+        }
+
+        async function loadDashboardData() {
+            try {
+                await Promise.all([
+                    fetchAnalyses(),
+                    loadGlobalStats()
+                ]);
+            } catch (error) {
+                console.error('Failed to load initial dashboard data:', error);
+            }
+        }
+
+        async function loadGlobalStats() {
+            try {
+                const response = await fetch('/api/analyses-stats');
+                const stats = await response.json();
+                updateGlobalStats(stats);
+            } catch (error) {
+                console.error('Failed to load global stats:', error);
+            }
+        }
+
+        async function fetchAnalyses() {
+            const start = document.getElementById('start-date').value;
+            const end = document.getElementById('end-date').value;
+            const search = document.getElementById('analyses-search').value;
+
+            let url = `/api/all-analyses?page=${currentPage}`;
+            if (start && end) url += `&start_date=${start}&end_date=${end}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+
+            try {
+                const response = await fetch(url);
+                const payload = await response.json();
+                currentAnalysesData = payload.data;
+                currentPage = payload.page;
+                totalPages = payload.total_pages;
+
+                sortAndRenderAnalyses();
+                renderPagination(payload);
+            } catch(error) {
+                console.error('Failed to fetch analyses:', error);
+            }
+        }
+        
+        function renderTable(type, data) {
+            const tbody = document.getElementById(`${type}-tbody`);
+            tbody.innerHTML = ''; // Clear the table first
+            
+            if (!data || data.length === 0) {
+                const colspan = (type === 'analyses') ? 6 : 4;
+                tbody.innerHTML = `<tr><td colspan="${colspan}">No data available.</td></tr>`;
+                return;
+            }
+
+            data.forEach((item, index) => {
+                let row = document.createElement('tr');
+                row.id = `${type}-row-${item.id}`;
+
+                // *** START OF ENHANCEMENT ***
+                // Apply the fadeInUp animation with a slight delay for each row
+                row.className = 'anim-row-in';
+                row.style.animationDelay = `${index * 0.03}s`;
+                // *** END OF ENHANCEMENT ***
+
+                if (type === 'analyses') {
+                    row.innerHTML = `
+                        <td>${item.url}</td>
+                        <td><span class="flag ${item.flag}">${item.flag}</span></td>
+                        <td>${item.threat_score}</td>
+                        <td>${item.analysis_source.toUpperCase()}</td>
+                        <td>${new Date(item.analysis_timestamp).toLocaleString()}</td>
+                        <td><button class="btn-delete" onclick="deleteItem('analysis', ${item.id})"><i class="fa-solid fa-trash-can"></i></button></td>
+                    `;
+                }
+                tbody.appendChild(row);
+            });
+        }
+
+        function sortAndRenderAnalyses() {
+            const { column, order } = currentSort;
+            
+            currentAnalysesData.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                // *** START OF FIX ***
+                // If the column is the timestamp, create Date objects and compare them chronologically.
+                // This is the correct way to sort dates.
+                if (column === 'analysis_timestamp') {
+                    const dateA = new Date(valA);
+                    const dateB = new Date(valB);
+                    return order === 'asc' ? dateA - dateB : dateB - dateA;
+                }
+                // *** END OF FIX ***
+
+                // The rest of the logic for numeric and text sorting remains the same.
+                if (typeof valA === 'number') {
+                    return order === 'asc' ? valA - valB : valB - valA;
+                }
+
+                valA = String(valA).toLowerCase();
+                valB = String(valB).toLowerCase();
+
+                if (valA < valB) return order === 'asc' ? -1 : 1;
+                if (valA > valB) return order === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderTable('analyses', currentAnalysesData);
+        }
+        
+        function updateGlobalStats(stats) {
+            document.getElementById('total-scans').textContent = stats.total_scans || 0;
+            document.getElementById('avg-score').textContent = (stats.avg_score || 0.0).toFixed(1);
+            
+            const isDark = document.body.classList.contains('dark-mode');
+            const chartTextColor = isDark ? '#e2e8f0' : '#1e293b';
+
+            const flagCounts = {
+                'Legitimate': stats.legitimate_count || 0,
+                'Suspicious': stats.suspicious_count || 0,
+                'Malicious': stats.malicious_count || 0
+            };
+            
+            const chartData = {
+                labels: Object.keys(flagCounts),
+                datasets: [{
+                    label: 'Flag Distribution (All Time)',
+                    data: Object.values(flagCounts),
+                    backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(255, 99, 132, 0.6)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 206, 86, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            };
+            const ctx = document.getElementById('flagChart').getContext('2d');
+            if (flagChart) flagChart.destroy();
+            flagChart = new Chart(ctx, {
+                type: 'doughnut', data: chartData,
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: chartTextColor } } } }
+            });
+        }
+
+        function applyFilters() {
+            currentPage = 1;
+            fetchAnalyses();
+        }
+
+        function clearFilters() {
+            document.getElementById('start-date').value = '';
+            document.getElementById('end-date').value = '';
+            document.getElementById('analyses-search').value = '';
+            currentPage = 1;
+            fetchAnalyses();
+        }
+        
+        function renderPagination(payload) {
+            const container = document.getElementById('pagination-controls-container');
+            if (!payload || payload.total_pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = `
+                <div class="pagination-info">Page ${payload.page} of ${payload.total_pages} (${payload.total_records} results)</div>
+                <div class="pagination-buttons">
+                    <button class="btn btn-secondary" id="prev-page-btn" onclick="changePage(-1)">Previous</button>
+                    <button class="btn btn-secondary" id="next-page-btn" onclick="changePage(1)">Next</button>
+                </div>
+            `;
+            document.getElementById('prev-page-btn').disabled = payload.page === 1;
+            document.getElementById('next-page-btn').disabled = payload.page === payload.total_pages;
+        }
+
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                fetchAnalyses();
+            }
+        }
+
+        async function deleteItem(type, id) {
+            const endpoint = type === 'analysis' ? `/api/delete-analysis/${id}` : `/api/delete-feedback/${id}`;
+            if (!confirm(`Are you sure you want to delete this ${type} record?`)) return;
+
+            try {
+                const response = await fetch(endpoint, { method: 'DELETE' });
+                if (!response.ok) throw new Error('Deletion failed');
+                
+                if (type === 'analysis') {
+                    fetchAnalyses();
+                    loadGlobalStats();
+                }
+            } catch (error) {
+                console.error(`Failed to delete item:`, error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
