@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="AwareLink checks suspicious links, messages, and screenshots using local machine learning.">
+  <title>AwareLink — Pause. Check. Decide.</title>
+  <link rel="stylesheet" href="/app.css?v=3013b05ee8d0">
+  <script src="/app.js?v=36f155005726" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="AwareLink home">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 24 16 6l9 18M11 17h10M6 26h20"/></svg></span>
+        <span>AwareLink<span class="brand-period">.</span></span>
+      </a>
+      <nav class="header-nav" aria-label="Main navigation">
+        <a href="#how-it-works">How it works</a>
+        <button id="admin-open" class="quiet-button" type="button">Admin</button>
+      </nav>
+      <span class="local-status"><span aria-hidden="true"></span> Local ML. Clearer decisions.</span>
+    </header>
+
+    <main id="main-content">
+      <section id="workspace">
+        <div class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">PAUSE. CHECK. DECIDE.</p>
+            <h1>A little clarity<br>before you click<span class="accent">.</span></h1>
+          </div>
+          <div class="hero-note">
+            <p>Suspicious link? Uncertain message?<br>Take a closer look with local machine learning.</p>
+            <p class="hero-small">Your content is analyzed on this server.<br>No LLM services. No account needed.</p>
+          </div>
+        </div>
+
+        <div id="connection-notice" class="notice" role="status" hidden></div>
+        <div id="shared-notice" class="shared-notice" hidden>
+          <span>You're viewing a shared analysis.</span>
+          <a href="/">Check something of your own <span aria-hidden="true">↗</span></a>
+        </div>
+
+        <section class="analysis-workbench" aria-label="Check a link, message, or screenshot">
+          <div class="input-panel">
+            <div class="section-head"><span class="eyebrow">01 / YOUR INPUT</span><span class="mini-tag">One check. One flow.</span></div>
+            <div class="type-tabs" role="tablist" aria-label="What would you like to check?">
+              <button class="type-tab active" id="tab-url" type="button" role="tab" aria-selected="true" aria-controls="panel-url" data-kind="url">Website link</button>
+              <button class="type-tab" id="tab-news" type="button" role="tab" aria-selected="false" aria-controls="panel-news" tabindex="-1" data-kind="news">News &amp; text</button>
+              <button class="type-tab" id="tab-screenshot" type="button" role="tab" aria-selected="false" aria-controls="panel-screenshot" tabindex="-1" data-kind="screenshot">Screenshot</button>
+            </div>
+
+            <form id="analysis-form">
+              <div id="panel-url" class="input-tab-panel" role="tabpanel" aria-labelledby="tab-url">
+                <label for="url-input">Paste the website address</label>
+                <input id="url-input" name="url" type="url" inputmode="url" autocomplete="off" placeholder="https://example.com" aria-describedby="url-hint" maxlength="2048" required>
+                <p id="url-hint" class="field-hint">We look at the address for patterns common in phishing links.</p>
+                <label class="checkbox-field" for="inspect-input"><input id="inspect-input" type="checkbox"><span>Also inspect the website<span class="checkbox-hint">Adds a controlled connection to the public website.</span></span></label>
+              </div>
+              <div id="panel-news" class="input-tab-panel" role="tabpanel" aria-labelledby="tab-news" hidden>
+                <label for="news-input">Paste the news text or claim</label>
+                <textarea id="news-input" name="news" rows="5" placeholder="Paste the text you want to take a closer look at…" aria-describedby="news-hint" maxlength="12000" disabled></textarea>
+                <p id="news-hint" class="field-hint">Checks English-language patterns. It does not verify whether a claim is true.</p>
+              </div>
+              <div id="panel-screenshot" class="input-tab-panel" role="tabpanel" aria-labelledby="tab-screenshot" hidden>
+                <label for="screenshot-input">Upload a screenshot with readable text</label>
+                <div id="upload-zone" class="upload-zone">
+                  <svg aria-hidden="true" viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="32" rx="3"/><path d="m11 33 10-10 8 8 5-5 8 8"/><circle cx="33" cy="17" r="3"/></svg>
+                  <span class="upload-title">Choose an image, or drop it here</span>
+                  <span id="upload-size-hint" class="upload-hint">PNG, JPEG, or WebP · up to 2 MB</span>
+                  <input id="screenshot-input" type="file" name="screenshot" accept="image/png,image/jpeg,image/webp" aria-describedby="screenshot-hint" disabled>
+                </div>
+                <div id="upload-preview" class="upload-preview" hidden><img id="preview-image" alt="Preview of your selected screenshot"><div><strong id="preview-filename"></strong><button id="clear-file" class="text-button" type="button">Remove image</button></div></div>
+                <p id="screenshot-hint" class="field-hint">Reads English text locally, then checks message patterns. Visual authenticity and logos are not verified.</p>
+                <p id="ocr-notice" class="field-hint ocr-notice" hidden>Screenshot text reading is not available on this server. You can paste the text in News &amp; text instead.</p>
+              </div>
+              <p id="form-error" class="form-error" role="alert" hidden></p>
+              <div class="form-actions">
+                <button id="analyze-button" class="primary-button" type="submit"><span id="analyze-label">Check this link</span><span aria-hidden="true">↗</span></button>
+                <button id="cancel-button" class="secondary-button" type="button" hidden>Cancel</button>
+              </div>
+            </form>
+            <div class="pipeline" aria-label="Analysis progress">
+              <ol id="pipeline-steps">
+                <li data-stage="queued"><span class="step-dot" aria-hidden="true"></span><span>Receive</span></li>
+                <li data-stage="extracting"><span class="step-dot" aria-hidden="true"></span><span>Read</span></li>
+                <li data-stage="classifying"><span class="step-dot" aria-hidden="true"></span><span>Check</span></li>
+                <li data-stage="saving"><span class="step-dot" aria-hidden="true"></span><span>Save</span></li>
+              </ol>
+              <p id="progress-message" role="status" aria-live="polite">Ready when you are.</p>
+            </div>
+          </div>
+
+          <div class="result-panel" id="result-panel" aria-busy="false">
+            <div class="section-head"><span class="eyebrow">02 / THE FINDINGS</span><span id="result-type" class="mini-tag">A closer look</span></div>
+            <div id="empty-result" class="empty-result">
+              <div class="empty-emblem" aria-hidden="true"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="47"/><circle cx="60" cy="60" r="31"/><path d="M60 4v22M60 94v22M4 60h22M94 60h22M39 61l14 14 29-30"/></svg></div>
+              <h2>Know what to look for.</h2>
+              <p>A risk estimate and the patterns behind it.<br>You make the final decision.</p>
+              <span class="empty-caption">Every check deserves context.</span>
+            </div>
+            <div id="result-content" hidden>
+              <div class="result-heading"><div><p id="result-kind" class="result-kind"></p><h2 id="result-verdict" tabindex="-1"></h2></div><div class="score-block"><strong id="result-score"></strong><span>risk / 100</span></div></div>
+              <p id="result-input" class="result-input"></p>
+              <div class="risk-scale" aria-label="Risk estimate from 0 to 100"><div class="risk-track"><span id="risk-marker"></span></div><div class="risk-axis"><span>Lower risk</span><span>Higher risk</span></div></div>
+              <p id="result-summary" class="result-summary"></p>
+              <p class="model-caution">Research model estimate. Verify before you act.</p>
+              <div class="result-evidence"><h3>What stood out</h3><ul id="result-signals" class="signal-list"></ul></div>
+              <details class="result-details"><summary>Limits of this check</summary><ul id="result-limitations"></ul><p class="field-hint">A low risk estimate cannot guarantee a safe link or a true claim.</p></details>
+              <details id="checks-details" class="result-details" hidden><summary>Website observations</summary><dl id="result-checks" class="checks-list"></dl></details>
+              <details id="extracted-details" class="result-details" hidden><summary>Text read from the image</summary><p id="extracted-text" class="extracted-text"></p></details>
+              <div class="result-footer"><span id="result-timing"></span><button id="share-button" class="text-button" type="button">Copy share link <span aria-hidden="true">↗</span></button></div>
+              <div id="share-fallback" class="share-fallback" hidden><label for="share-url">Share link</label><input id="share-url" type="text" readonly></div>
+              <div id="feedback-section" class="feedback-section"><p>Does this result look right?</p><div><button id="feedback-yes" class="feedback-button" type="button" aria-pressed="false">Yes</button><button id="feedback-no" class="feedback-button" type="button" aria-pressed="false">Needs review</button></div></div>
+              <form id="feedback-form" hidden><label for="feedback-reason">What should we know?</label><select id="feedback-reason"><option value="helpful">The result seems accurate</option><option value="false_positive">The risk seems too high</option><option value="false_negative">The risk seems too low</option><option value="unclear">The explanation was unclear</option><option value="other">Something else</option></select><label class="sr-only" for="feedback-text">Optional feedback</label><textarea id="feedback-text" rows="2" maxlength="1000" placeholder="A little more context (optional)"></textarea><button class="secondary-button" id="feedback-submit" type="submit">Send feedback</button></form>
+              <p id="feedback-status" class="field-hint" role="status" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="recent-section" aria-labelledby="recent-title">
+          <div class="section-head section-head-wide"><div><p class="eyebrow">A RECORD TO COME BACK TO</p><h2 id="recent-title">Your recent checks</h2></div><button id="history-refresh" class="text-button" type="button">Refresh <span aria-hidden="true">↻</span></button></div>
+          <div id="history-list" class="history-list"><p class="history-empty">Your checks will appear here. No sign-up needed.</p></div>
+        </section>
+
+        <section id="how-it-works" class="how-section" aria-labelledby="how-title">
+          <div class="how-heading"><p class="eyebrow">LESS GUESSWORK</p><h2 id="how-title">Fast checks.<br>Honest limits.</h2></div>
+          <div class="how-item"><span class="how-number">01</span><h3>Local by design</h3><p>Models run on this server. Your input isn't sent to an LLM service for an answer.</p></div>
+          <div class="how-item"><span class="how-number">02</span><h3>One continuous check</h3><p>Follow the progress from input to result, with no extra steps in between.</p></div>
+          <div class="how-item"><span class="how-number">03</span><h3>Evidence, with context</h3><p>See the detected patterns and the limits. Risk estimates support your judgment.</p></div>
+        </section>
+
+        <section class="news-section" aria-labelledby="news-title">
+          <div class="section-head section-head-wide"><div><p class="eyebrow">STAY AWARE</p><h2 id="news-title">From the security desk</h2></div><button id="news-load" class="secondary-button" type="button">Load latest headlines <span aria-hidden="true">↗</span></button></div>
+          <p id="news-status" class="field-hint" role="status">Headlines load only when you ask. Opening an article takes you to its source.</p>
+          <div id="news-list" class="news-list" hidden></div>
+        </section>
+
+        <section id="community-section" class="community-section" hidden aria-labelledby="community-title"><div class="section-head section-head-wide"><div><p class="eyebrow">THE PUBLIC PICTURE</p><h2 id="community-title">Recently checked links</h2></div><span class="field-hint">Public website checks</span></div><div id="community-list" class="history-list"></div></section>
+      </section>
+
+      <section id="admin-view" class="admin-view" hidden aria-labelledby="admin-title">
+        <div class="admin-heading"><div><p class="eyebrow">AWARELINK / ADMIN</p><h1 id="admin-title">The overview<span class="accent">.</span></h1><p class="field-hint">Analysis records, feedback, and model validation in one place.</p></div><div class="admin-actions"><button id="admin-refresh" class="secondary-button" type="button">Refresh</button><button id="admin-close" class="text-button" type="button">Back to checks</button><button id="logout-button" class="text-button" type="button">Sign out</button></div></div>
+        <p id="admin-status" class="notice" role="status" hidden></p>
+        <div class="stats-grid"><article class="stat-card"><span>Total checks</span><strong id="stat-total">—</strong></article><article class="stat-card"><span>Higher risk</span><strong id="stat-high">—</strong></article><article class="stat-card"><span>Needs review</span><strong id="stat-review">—</strong></article><article class="stat-card"><span>Feedback received</span><strong id="stat-feedback">—</strong></article></div>
+        <div class="admin-tabs" role="tablist" aria-label="Admin sections"><button id="admin-tab-analyses" class="type-tab active" type="button" role="tab" aria-selected="true" aria-controls="admin-analyses" data-admin-tab="analyses">All checks</button><button id="admin-tab-feedback" class="type-tab" type="button" role="tab" aria-selected="false" aria-controls="admin-feedback" tabindex="-1" data-admin-tab="feedback">Feedback</button><button id="admin-tab-models" class="type-tab" type="button" role="tab" aria-selected="false" aria-controls="admin-models" tabindex="-1" data-admin-tab="models">Model details</button></div>
+        <div id="admin-analyses" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-analyses"><div class="admin-filters"><label for="admin-kind-filter">Type</label><select id="admin-kind-filter"><option value="all">All types</option><option value="url">Website link</option><option value="news">News &amp; text</option><option value="screenshot">Screenshot</option></select><label for="admin-label-filter">Risk</label><select id="admin-label-filter"><option value="all">All results</option><option value="high_risk">Higher risk</option><option value="review">Needs review</option><option value="low_risk">Lower risk</option></select><span id="admin-record-count" class="field-hint"></span></div><div class="table-scroll"><table class="admin-table"><thead><tr><th scope="col">Input</th><th scope="col">Type</th><th scope="col">Result</th><th scope="col">When</th><th scope="col">Actions</th></tr></thead><tbody id="admin-analysis-body"></tbody></table></div><p id="admin-analysis-empty" class="history-empty" hidden>No checks match these filters.</p></div>
+        <div id="admin-feedback" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-feedback" hidden><div class="table-scroll"><table class="admin-table"><thead><tr><th scope="col">Result</th><th scope="col">Response</th><th scope="col">Reason &amp; comment</th><th scope="col">When</th><th scope="col">Actions</th></tr></thead><tbody id="admin-feedback-body"></tbody></table></div><p id="admin-feedback-empty" class="history-empty" hidden>No feedback yet.</p></div>
+        <div id="admin-models" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-models" hidden><p class="field-hint model-intro">Validation describes performance on the included evaluation data. It does not guarantee performance on every real-world example.</p><div id="admin-model-cards" class="model-grid"></div></div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><p class="footer-brand">AwareLink<span class="accent">.</span></p><p>A pause can make a difference.</p><span>LOCAL MACHINE LEARNING</span></footer>
+  </div>
+
+  <dialog id="login-dialog" class="login-dialog" aria-labelledby="login-title"><div class="dialog-top"><span class="eyebrow">AWARELINK / ADMIN</span><button id="login-close" class="icon-button" type="button" aria-label="Close sign-in">×</button></div><h2 id="login-title">Welcome back<span class="accent">.</span></h2><p class="field-hint">Sign in to manage records and review feedback.</p><p id="login-unavailable" class="notice" hidden>Administration isn't enabled on this server yet. Enable an admin account during setup to manage saved checks.</p><form id="login-form"><label for="login-username">Username</label><input id="login-username" name="username" autocomplete="username" required maxlength="100"><label for="login-password">Password</label><input id="login-password" type="password" name="password" autocomplete="current-password" required maxlength="256"><p id="login-error" class="form-error" role="alert" hidden></p><button id="login-submit" class="primary-button" type="submit">Sign in <span aria-hidden="true">↗</span></button></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

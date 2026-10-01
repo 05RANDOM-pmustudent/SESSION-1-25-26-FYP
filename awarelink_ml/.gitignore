@@ -1,0 +1,9 @@
+.venv/
+data/
+__pycache__/
+*.pyc
+.env
+credentials.env
+*.sqlite3*
+training/data/
+benchmark-results.json

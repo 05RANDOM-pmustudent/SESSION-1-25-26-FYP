@@ -1,0 +1,4 @@
+-c constraints.txt
+uvicorn==0.54.0
+urllib3==2.8.0
+Pillow==12.3.0
