@@ -1,0 +1,4 @@
+# Training and re-evaluation only. The server does not need these packages.
+numpy==2.5.3
+scipy==1.18.1
+scikit-learn==1.9.1

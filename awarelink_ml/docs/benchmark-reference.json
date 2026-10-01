@@ -1,0 +1,233 @@
+{
+  "generated_utc": "2026-10-01T00:16:41.965099+00:00",
+  "environment": {
+    "python": "3.13.5",
+    "implementation": "CPython",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "machine": "AMD64",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12450HX",
+    "logical_cpu_count": 12,
+    "runtime_dependencies": {
+      "uvicorn": "0.54.0",
+      "urllib3": "2.8.0",
+      "Pillow": "12.3.0"
+    },
+    "transitive_transport_dependencies": {
+      "click": "8.5.0",
+      "h11": "0.16.0"
+    }
+  },
+  "parameters": {
+    "samples": 100,
+    "warmup": 10,
+    "startup_samples": 10,
+    "workers": 4,
+    "queue_size": 8,
+    "request_limit": 10000,
+    "sqlite": "WAL, synchronous=NORMAL",
+    "percentile": "nearest rank p95",
+    "inference_inputs": "fixed bounded short/long; requests use unique text/URLs",
+    "http_adapter_workers": 16
+  },
+  "model_bytes": {
+    "news.json": 422671,
+    "scam.json": 348710,
+    "url.json": 442762
+  },
+  "scope": "Sequential local microbenchmarks; no screenshots/OCR, website inspection, external feed, TLS, browser rendering or concurrent throughput test",
+  "model_bytes_total": 1214143,
+  "model_versions": {
+    "url": "1.2.0",
+    "scam": "1.0.0",
+    "news": "1.0.0"
+  },
+  "pure_inference": {
+    "url": {
+      "short": {
+        "samples": 100,
+        "p50_ms": 0.0694,
+        "p95_ms": 0.1642,
+        "min_ms": 0.0557,
+        "max_ms": 0.3611,
+        "characters": 33,
+        "warmup": 10
+      },
+      "long": {
+        "samples": 100,
+        "p50_ms": 0.1226,
+        "p95_ms": 0.1565,
+        "min_ms": 0.1181,
+        "max_ms": 0.3109,
+        "characters": 2048,
+        "warmup": 10
+      }
+    },
+    "scam": {
+      "short": {
+        "samples": 100,
+        "p50_ms": 0.0718,
+        "p95_ms": 0.0854,
+        "min_ms": 0.0653,
+        "max_ms": 0.172,
+        "characters": 34,
+        "warmup": 10
+      },
+      "long": {
+        "samples": 100,
+        "p50_ms": 4.0369,
+        "p95_ms": 6.4286,
+        "min_ms": 3.1412,
+        "max_ms": 7.0191,
+        "characters": 12000,
+        "warmup": 10
+      }
+    },
+    "news": {
+      "short": {
+        "samples": 100,
+        "p50_ms": 0.0232,
+        "p95_ms": 0.0398,
+        "min_ms": 0.0224,
+        "max_ms": 0.1134,
+        "characters": 53,
+        "warmup": 10
+      },
+      "long": {
+        "samples": 100,
+        "p50_ms": 2.1095,
+        "p95_ms": 3.4188,
+        "min_ms": 1.7435,
+        "max_ms": 3.6379,
+        "characters": 12000,
+        "warmup": 10
+      }
+    }
+  },
+  "application_startup": {
+    "samples": 10,
+    "p50_ms": 76.8526,
+    "p95_ms": 108.2394,
+    "min_ms": 56.63,
+    "max_ms": 108.2394,
+    "first_initialization_ms": 56.63,
+    "scope": "After module imports, fresh disposable DB and secret, models loaded from disk, local OCR disabled; OS file cache not flushed"
+  },
+  "full_wsgi_stream_and_persistence": {
+    "url": {
+      "samples": 100,
+      "p50_ms": 0.7914,
+      "p95_ms": 1.3882,
+      "min_ms": 0.5784,
+      "max_ms": 2.8965,
+      "warmup_requests": 10,
+      "persisted_unique_records": 100,
+      "real_model_calls": 100,
+      "stream_events_min": 4,
+      "stream_events_max": 4
+    },
+    "news": {
+      "samples": 100,
+      "p50_ms": 0.5884,
+      "p95_ms": 0.8385,
+      "min_ms": 0.481,
+      "max_ms": 11.6529,
+      "warmup_requests": 10,
+      "persisted_unique_records": 100,
+      "real_model_calls": 100,
+      "stream_events_min": 4,
+      "stream_events_max": 4
+    }
+  },
+  "sqlite_reuse": {
+    "same_thread_connection_reused": true,
+    "connections_after_wsgi": 1,
+    "database_network_connections": 0,
+    "connections_after_http": 4
+  },
+  "cache_reuse_full_wsgi": {
+    "samples": 100,
+    "p50_ms": 0.2809,
+    "p95_ms": 0.4964,
+    "min_ms": 0.2413,
+    "max_ms": 0.6383,
+    "additional_model_calls": 0,
+    "persisted_record_reused": true,
+    "includes": "session, NDJSON stream, existing SQLite record update"
+  },
+  "shared_inflight": {
+    "duplicate_submissions": 20,
+    "identical_task_returned": true,
+    "real_model_calls": 1,
+    "duplicate_submission_latency": {
+      "samples": 20,
+      "p50_ms": 0.0029,
+      "p95_ms": 0.0077,
+      "min_ms": 0.0027,
+      "max_ms": 0.0247
+    },
+    "method": "A controlled event gate holds one real prediction pending; this verifies coalescing, not natural hit rate or analysis latency"
+  },
+  "localhost_http_stream_and_persistence": {
+    "url": {
+      "samples": 100,
+      "p50_ms": 2.6743,
+      "p95_ms": 4.2021,
+      "min_ms": 2.2676,
+      "max_ms": 33.8774,
+      "warmup_requests": 10,
+      "persisted_unique_records": 100,
+      "real_model_calls": 100,
+      "stream_events_min": 4,
+      "stream_events_max": 4
+    },
+    "news": {
+      "samples": 100,
+      "p50_ms": 2.5252,
+      "p95_ms": 3.2053,
+      "min_ms": 2.1291,
+      "max_ms": 13.5173,
+      "warmup_requests": 10,
+      "persisted_unique_records": 100,
+      "real_model_calls": 100,
+      "stream_events_min": 4,
+      "stream_events_max": 4
+    }
+  },
+  "http_analysis_transport": {
+    "client_connect_calls": 1,
+    "distinct_client_local_endpoints": 1,
+    "total_http_requests": 221,
+    "one_socket_reused_across_all_requests": true,
+    "protocol": "HTTP/1.1, loopback without TLS",
+    "server": "Uvicorn, h11, asyncio, one process, ephemeral port, default 5-second keep-alive",
+    "note": "One client socket is verified across bootstrap, warm-up and timed analysis streams"
+  },
+  "http_keep_alive_fixed_length_health": {
+    "samples": 100,
+    "p50_ms": 0.8099,
+    "p95_ms": 1.0497,
+    "min_ms": 0.6515,
+    "max_ms": 1.2432,
+    "client_connect_calls": 1,
+    "distinct_client_local_endpoints": 1,
+    "requests_on_one_socket": 101,
+    "includes": "Health route only; no model prediction, session or persistence"
+  },
+  "checks": {
+    "real_models": true,
+    "registry_loads_for_request_benchmarks": 1,
+    "external_fetch_attempts": 0,
+    "no_llm_or_remote_inference": true,
+    "full_stream_results_persisted": true,
+    "cache_avoids_inference": true,
+    "duplicate_inflight_uses_one_inference": true,
+    "pipeline_metrics": {
+      "submitted": 562,
+      "cache_hits": 100,
+      "coalesced": 20,
+      "completed": 442,
+      "failed": 0
+    },
+    "temp_database_removed_on_exit": true
+  }
+}

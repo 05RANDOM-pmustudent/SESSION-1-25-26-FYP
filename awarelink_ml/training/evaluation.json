@@ -1,0 +1,1135 @@
+{
+  "generated_utc": "2026-10-01T00:00:44.590781+00:00",
+  "models": {
+    "url": {
+      "kind": "url",
+      "name": "URL base-domain logistic regression",
+      "version": "1.2.0",
+      "feature_version": "crc32-logtf-l2-basehost-v3",
+      "dimensions": 32768,
+      "intercept": -0.2878329958,
+      "thresholds": {
+        "low": 0.05,
+        "high": 0.95
+      },
+      "deployment_status": "research_baseline",
+      "limitations": [
+        "Lexical hostname patterns cannot establish whether a website is safe or compromised.",
+        "Subdomain, path, query, scheme, webpage, DNS, TLS and domain-age evidence are excluded from the trained base-domain model.",
+        "Subdomain/path-specific phishing, private-hosting pages and compromised trusted websites cannot be detected from the base domain alone.",
+        "Base-domain normalization uses last labels with common country-code handling, not a complete runtime Public Suffix List.",
+        "Historical dataset artifacts and shared URL templates can inflate evaluation even with disjoint domains.",
+        "A low score is not a guarantee; new campaigns and unusual legitimate sites can be misclassified."
+      ],
+      "dataset": {
+        "raw_rows": 235795,
+        "usable_deduplicated_rows": 234687,
+        "invalid_rows": 0,
+        "conflicting_normalized_urls_removed": 1,
+        "duplicate_or_conflict_rows_removed": 1108,
+        "label_mapping": {
+          "0": "phishing -> positive 1",
+          "1": "legitimate -> negative 0"
+        },
+        "fields_used": [
+          "URL",
+          "label"
+        ],
+        "split_method": "GroupShuffleSplit of connected components linking coarse model base domains and full PSL registrable domains; seed 20261001; approx 64/16/20",
+        "registrable_domain_overlap_between_splits": 0,
+        "model_base_domain_overlap_between_splits": 0,
+        "domain_group_counts": {
+          "train": 111000,
+          "validation": 27751,
+          "test": 34688
+        },
+        "public_suffix_list": {
+          "source": "https://publicsuffix.org/list/public_suffix_list.dat",
+          "sha256": "257b298daca42f6d8ec964e238c2a55518e14f09d3117917ec8acee6f188503e"
+        },
+        "title": "PhiUSIIL Phishing URL (Website)",
+        "landing_page": "https://archive.ics.uci.edu/dataset/967/phiusiil+phishing+url+dataset",
+        "download": "https://archive.ics.uci.edu/static/public/967/phiusiil+phishing+url+dataset.zip",
+        "archive": "phiusiil.zip",
+        "directory": "phiusiil",
+        "license": "CC BY 4.0",
+        "citation": "Arvind Prasad and Shalini Chandra (2024). PhiUSIIL Phishing URL (Website). UCI Machine Learning Repository. doi:10.1016/j.cose.2023.103545.",
+        "archive_sha256": "0a639fd03aea6308c5b1c10c92aa23c2ce1505447a9137271865cd0badc9a59a",
+        "retrieved_date": "2026-10-01",
+        "split_rows": {
+          "train": 155093,
+          "validation": 34797,
+          "test": 44797
+        },
+        "split_positive_rows": {
+          "train": 68744,
+          "validation": 13273,
+          "test": 17821
+        }
+      },
+      "evaluation": {
+        "validation": {
+          "samples": 34797,
+          "positive_samples": 13273,
+          "negative_samples": 21524,
+          "accuracy_at_0_5": 0.813863,
+          "precision_at_0_5": 0.874642,
+          "recall_at_0_5": 0.597679,
+          "f1_at_0_5": 0.710111,
+          "roc_auc": 0.870574,
+          "average_precision": 0.846174,
+          "brier_score": 0.134418,
+          "confusion_matrix_at_0_5": [
+            [
+              20387,
+              1137
+            ],
+            [
+              5340,
+              7933
+            ]
+          ],
+          "majority_class_accuracy": 0.618559,
+          "operating_thresholds": {
+            "low": 0.05,
+            "high": 0.95
+          },
+          "high_risk_count": 1316,
+          "high_risk_precision": 0.992401,
+          "low_risk_count": 3515,
+          "positive_rate_among_low_risk": 0.027027,
+          "review_fraction": 0.861166
+        },
+        "test": {
+          "samples": 44797,
+          "positive_samples": 17821,
+          "negative_samples": 26976,
+          "accuracy_at_0_5": 0.806862,
+          "precision_at_0_5": 0.881374,
+          "recall_at_0_5": 0.594523,
+          "f1_at_0_5": 0.710073,
+          "roc_auc": 0.873144,
+          "average_precision": 0.859582,
+          "brier_score": 0.134019,
+          "confusion_matrix_at_0_5": [
+            [
+              25550,
+              1426
+            ],
+            [
+              7226,
+              10595
+            ]
+          ],
+          "majority_class_accuracy": 0.602183,
+          "operating_thresholds": {
+            "low": 0.05,
+            "high": 0.95
+          },
+          "high_risk_count": 4917,
+          "high_risk_precision": 0.997763,
+          "low_risk_count": 4159,
+          "positive_rate_among_low_risk": 0.04328,
+          "review_fraction": 0.797397
+        }
+      },
+      "training": {
+        "seed": 20261001,
+        "algorithm": "L2 logistic regression, liblinear",
+        "selected_C": 1.0,
+        "selection": "Maximum validation ROC-AUC; held-out test accessed after model selection",
+        "candidates": [
+          {
+            "C": 1.0,
+            "validation_roc_auc": 0.870574,
+            "iterations": 8
+          }
+        ],
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "scikit-learn": "1.9.1"
+        },
+        "operating_threshold_selection": "URL 0.05/0.95 conservative triage after external benign-domain sanity checks, without optimizing test labels; SMS 0.2/0.8 preset; news always review",
+        "elapsed_seconds": 19.803,
+        "export_parity_max_probability_error": 1.9549737606538997e-08
+      }
+    },
+    "scam": {
+      "kind": "scam",
+      "name": "SMS spam logistic regression",
+      "version": "1.0.0",
+      "feature_version": "crc32-logtf-l2-basehost-v3",
+      "dimensions": 32768,
+      "intercept": -4.8335527765,
+      "thresholds": {
+        "low": 0.2,
+        "high": 0.8
+      },
+      "deployment_status": "research_baseline",
+      "limitations": [
+        "Trained on historical English SMS spam, which is not the same as a modern scam dataset.",
+        "Cannot reliably assess Malay or other unsupported languages, novel scams, or image-only content.",
+        "Spam-like wording can appear in legitimate offers; a low score is not a guarantee."
+      ],
+      "dataset": {
+        "raw_rows": 5574,
+        "usable_deduplicated_rows": 5096,
+        "duplicate_or_conflict_rows_removed": 478,
+        "conflicting_text_groups_removed": 0,
+        "label_mapping": {
+          "spam": "positive 1",
+          "ham": "negative 0"
+        },
+        "fields_used": [
+          "message",
+          "label"
+        ],
+        "split_method": "Stratified 70/15/15 after token-normalized deduplication; phone numbers, URLs and emails normalized; seed 20261001",
+        "normalized_text_overlap_between_splits": 0,
+        "title": "SMS Spam Collection",
+        "landing_page": "https://archive.ics.uci.edu/dataset/228/sms+spam+collection",
+        "download": "https://archive.ics.uci.edu/static/public/228/sms+spam+collection.zip",
+        "archive": "sms.zip",
+        "directory": "sms",
+        "license": "CC BY 4.0",
+        "citation": "Tiago Almeida and Jose Maria Gomez Hidalgo (2011). SMS Spam Collection. UCI Machine Learning Repository. doi:10.24432/C5CC84.",
+        "archive_sha256": "1587ea43e58e82b14ff1f5425c88e17f8496bfcdb67a583dbff9eefaf9963ce3",
+        "retrieved_date": "2026-10-01",
+        "split_rows": {
+          "train": 3566,
+          "validation": 765,
+          "test": 765
+        },
+        "split_positive_rows": {
+          "train": 417,
+          "validation": 89,
+          "test": 89
+        }
+      },
+      "evaluation": {
+        "validation": {
+          "samples": 765,
+          "positive_samples": 89,
+          "negative_samples": 676,
+          "accuracy_at_0_5": 0.976471,
+          "precision_at_0_5": 0.986301,
+          "recall_at_0_5": 0.808989,
+          "f1_at_0_5": 0.888889,
+          "roc_auc": 0.978924,
+          "average_precision": 0.940454,
+          "brier_score": 0.020514,
+          "confusion_matrix_at_0_5": [
+            [
+              675,
+              1
+            ],
+            [
+              17,
+              72
+            ]
+          ],
+          "majority_class_accuracy": 0.88366,
+          "operating_thresholds": {
+            "low": 0.2,
+            "high": 0.8
+          },
+          "high_risk_count": 56,
+          "high_risk_precision": 0.982143,
+          "low_risk_count": 677,
+          "positive_rate_among_low_risk": 0.016248,
+          "review_fraction": 0.04183
+        },
+        "test": {
+          "samples": 765,
+          "positive_samples": 89,
+          "negative_samples": 676,
+          "accuracy_at_0_5": 0.985621,
+          "precision_at_0_5": 0.97561,
+          "recall_at_0_5": 0.898876,
+          "f1_at_0_5": 0.935673,
+          "roc_auc": 0.993534,
+          "average_precision": 0.941752,
+          "brier_score": 0.01373,
+          "confusion_matrix_at_0_5": [
+            [
+              674,
+              2
+            ],
+            [
+              9,
+              80
+            ]
+          ],
+          "majority_class_accuracy": 0.88366,
+          "operating_thresholds": {
+            "low": 0.2,
+            "high": 0.8
+          },
+          "high_risk_count": 67,
+          "high_risk_precision": 0.985075,
+          "low_risk_count": 669,
+          "positive_rate_among_low_risk": 0.007474,
+          "review_fraction": 0.037908
+        }
+      },
+      "training": {
+        "seed": 20261001,
+        "algorithm": "L2 logistic regression, liblinear",
+        "selected_C": 4.0,
+        "selection": "Maximum validation ROC-AUC; held-out test accessed after model selection",
+        "candidates": [
+          {
+            "C": 0.25,
+            "validation_roc_auc": 0.966957,
+            "iterations": 7
+          },
+          {
+            "C": 1.0,
+            "validation_roc_auc": 0.974254,
+            "iterations": 8
+          },
+          {
+            "C": 4.0,
+            "validation_roc_auc": 0.978924,
+            "iterations": 9
+          }
+        ],
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "scikit-learn": "1.9.1"
+        },
+        "operating_threshold_selection": "URL 0.05/0.95 conservative triage after external benign-domain sanity checks, without optimizing test labels; SMS 0.2/0.8 preset; news always review",
+        "elapsed_seconds": 0.433,
+        "export_parity_max_probability_error": 4.081380666765e-08
+      }
+    },
+    "news": {
+      "kind": "news",
+      "name": "LIAR language research baseline",
+      "version": "1.0.0",
+      "feature_version": "crc32-logtf-l2-basehost-v3",
+      "dimensions": 32768,
+      "intercept": 0.1484274377,
+      "thresholds": {
+        "low": 0.2,
+        "high": 0.8
+      },
+      "deployment_status": "research_only_always_review",
+      "limitations": [
+        "Research-only language baseline, not truth verification or a political-bias classifier.",
+        "Every news result requires review: wording alone cannot prove or disprove a claim.",
+        "Historical US political statements introduce topic and population bias and do not represent general news.",
+        "Speaker and party metadata are excluded, but wording may still encode spurious political associations.",
+        "LIAR permits research purposes only; review dataset rights before any commercial deployment."
+      ],
+      "dataset": {
+        "raw_rows": 12791,
+        "raw_official_split_rows": {
+          "train": 10240,
+          "validation": 1284,
+          "test": 1267
+        },
+        "usable_deduplicated_rows": 12753,
+        "duplicate_or_conflict_rows_removed": 38,
+        "conflicting_text_groups_removed": 5,
+        "label_mapping": {
+          "false / pants-fire / barely-true": "positive 1",
+          "half-true / mostly-true / true": "negative 0"
+        },
+        "fields_used": [
+          "statement",
+          "label"
+        ],
+        "excluded_metadata": [
+          "speaker",
+          "party",
+          "subject",
+          "job title",
+          "state",
+          "speaker credit history",
+          "context"
+        ],
+        "split_method": "Original train/valid/test files; token-normalized duplicates removed globally, retain earliest split; conflicts excluded",
+        "normalized_text_overlap_between_splits": 0,
+        "title": "LIAR v1.0",
+        "landing_page": "https://aclanthology.org/P17-2067/",
+        "download": "https://www.cs.ucsb.edu/~william/data/liar_dataset.zip",
+        "archive": "liar.zip",
+        "directory": "liar",
+        "license": "Research purposes only; original sources retain copyright (bundled README)",
+        "citation": "William Yang Wang (2017). \"Liar, Liar Pants on Fire\": A New Benchmark Dataset for Fake News Detection. ACL. doi:10.18653/v1/P17-2067.",
+        "archive_sha256": "611c1addad919743dde15822b87a60bfb760d8f85597f25289e34621800654c7",
+        "retrieved_date": "2026-10-01",
+        "split_rows": {
+          "train": 10214,
+          "validation": 1277,
+          "test": 1262
+        },
+        "split_positive_rows": {
+          "train": 4473,
+          "validation": 610,
+          "test": 551
+        }
+      },
+      "evaluation": {
+        "validation": {
+          "samples": 1277,
+          "positive_samples": 610,
+          "negative_samples": 667,
+          "accuracy_at_0_5": 0.616288,
+          "precision_at_0_5": 0.635747,
+          "recall_at_0_5": 0.460656,
+          "f1_at_0_5": 0.534221,
+          "roc_auc": 0.670649,
+          "average_precision": 0.643589,
+          "brier_score": 0.22794,
+          "confusion_matrix_at_0_5": [
+            [
+              506,
+              161
+            ],
+            [
+              329,
+              281
+            ]
+          ],
+          "majority_class_accuracy": 0.522318,
+          "operating_thresholds": {
+            "low": 0.2,
+            "high": 0.8
+          },
+          "high_risk_count": 0,
+          "high_risk_precision": null,
+          "low_risk_count": 0,
+          "positive_rate_among_low_risk": null,
+          "review_fraction": 1.0
+        },
+        "test": {
+          "samples": 1262,
+          "positive_samples": 551,
+          "negative_samples": 711,
+          "accuracy_at_0_5": 0.63233,
+          "precision_at_0_5": 0.603325,
+          "recall_at_0_5": 0.46098,
+          "f1_at_0_5": 0.522634,
+          "roc_auc": 0.67715,
+          "average_precision": 0.601019,
+          "brier_score": 0.22341,
+          "confusion_matrix_at_0_5": [
+            [
+              544,
+              167
+            ],
+            [
+              297,
+              254
+            ]
+          ],
+          "majority_class_accuracy": 0.563391,
+          "operating_thresholds": {
+            "low": 0.2,
+            "high": 0.8
+          },
+          "high_risk_count": 0,
+          "high_risk_precision": null,
+          "low_risk_count": 0,
+          "positive_rate_among_low_risk": null,
+          "review_fraction": 1.0
+        }
+      },
+      "training": {
+        "seed": 20261001,
+        "algorithm": "L2 logistic regression, liblinear",
+        "selected_C": 1.0,
+        "selection": "Maximum validation ROC-AUC; held-out test accessed after model selection",
+        "candidates": [
+          {
+            "C": 0.25,
+            "validation_roc_auc": 0.667083,
+            "iterations": 6
+          },
+          {
+            "C": 1.0,
+            "validation_roc_auc": 0.670649,
+            "iterations": 6
+          },
+          {
+            "C": 4.0,
+            "validation_roc_auc": 0.655561,
+            "iterations": 6
+          }
+        ],
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "scikit-learn": "1.9.1"
+        },
+        "operating_threshold_selection": "URL 0.05/0.95 conservative triage after external benign-domain sanity checks, without optimizing test labels; SMS 0.2/0.8 preset; news always review",
+        "elapsed_seconds": 1.282,
+        "export_parity_max_probability_error": 1.08979284207944e-08
+      }
+    }
+  },
+  "illustrative_samples_not_evaluation": {
+    "url": [
+      {
+        "input": "https://www.python.org/",
+        "result": {
+          "score": 12,
+          "label": "review",
+          "probability": 0.120392,
+          "model": "URL base-domain logistic regression",
+          "model_version": "1.2.0",
+          "signals": [
+            "Local model assessed base-domain spelling, structure and character patterns."
+          ],
+          "limitations": [
+            "Lexical hostname patterns cannot establish whether a website is safe or compromised.",
+            "Subdomain, path, query, scheme, webpage, DNS, TLS and domain-age evidence are excluded from the trained base-domain model.",
+            "Subdomain/path-specific phishing, private-hosting pages and compromised trusted websites cannot be detected from the base domain alone.",
+            "Base-domain normalization uses last labels with common country-code handling, not a complete runtime Public Suffix List.",
+            "Historical dataset artifacts and shared URL templates can inflate evaluation even with disjoint domains.",
+            "A low score is not a guarantee; new campaigns and unusual legitimate sites can be misclassified."
+          ],
+          "metrics": {
+            "samples": 44797,
+            "positive_samples": 17821,
+            "negative_samples": 26976,
+            "accuracy_at_0_5": 0.806862,
+            "precision_at_0_5": 0.881374,
+            "recall_at_0_5": 0.594523,
+            "f1_at_0_5": 0.710073,
+            "roc_auc": 0.873144,
+            "average_precision": 0.859582,
+            "brier_score": 0.134019,
+            "confusion_matrix_at_0_5": [
+              [
+                25550,
+                1426
+              ],
+              [
+                7226,
+                10595
+              ]
+            ],
+            "majority_class_accuracy": 0.602183,
+            "operating_thresholds": {
+              "low": 0.05,
+              "high": 0.95
+            },
+            "high_risk_count": 4917,
+            "high_risk_precision": 0.997763,
+            "low_risk_count": 4159,
+            "positive_rate_among_low_risk": 0.04328,
+            "review_fraction": 0.797397
+          }
+        }
+      },
+      {
+        "input": "https://docs.python.org/3/library/urllib.parse.html",
+        "result": {
+          "score": 12,
+          "label": "review",
+          "probability": 0.120392,
+          "model": "URL base-domain logistic regression",
+          "model_version": "1.2.0",
+          "signals": [
+            "Local model assessed base-domain spelling, structure and character patterns."
+          ],
+          "limitations": [
+            "Lexical hostname patterns cannot establish whether a website is safe or compromised.",
+            "Subdomain, path, query, scheme, webpage, DNS, TLS and domain-age evidence are excluded from the trained base-domain model.",
+            "Subdomain/path-specific phishing, private-hosting pages and compromised trusted websites cannot be detected from the base domain alone.",
+            "Base-domain normalization uses last labels with common country-code handling, not a complete runtime Public Suffix List.",
+            "Historical dataset artifacts and shared URL templates can inflate evaluation even with disjoint domains.",
+            "A low score is not a guarantee; new campaigns and unusual legitimate sites can be misclassified."
+          ],
+          "metrics": {
+            "samples": 44797,
+            "positive_samples": 17821,
+            "negative_samples": 26976,
+            "accuracy_at_0_5": 0.806862,
+            "precision_at_0_5": 0.881374,
+            "recall_at_0_5": 0.594523,
+            "f1_at_0_5": 0.710073,
+            "roc_auc": 0.873144,
+            "average_precision": 0.859582,
+            "brier_score": 0.134019,
+            "confusion_matrix_at_0_5": [
+              [
+                25550,
+                1426
+              ],
+              [
+                7226,
+                10595
+              ]
+            ],
+            "majority_class_accuracy": 0.602183,
+            "operating_thresholds": {
+              "low": 0.05,
+              "high": 0.95
+            },
+            "high_risk_count": 4917,
+            "high_risk_precision": 0.997763,
+            "low_risk_count": 4159,
+            "positive_rate_among_low_risk": 0.04328,
+            "review_fraction": 0.797397
+          }
+        }
+      },
+      {
+        "input": "https://en.wikipedia.org/wiki/Machine_learning",
+        "result": {
+          "score": 10,
+          "label": "review",
+          "probability": 0.103638,
+          "model": "URL base-domain logistic regression",
+          "model_version": "1.2.0",
+          "signals": [
+            "Local model assessed base-domain spelling, structure and character patterns."
+          ],
+          "limitations": [
+            "Lexical hostname patterns cannot establish whether a website is safe or compromised.",
+            "Subdomain, path, query, scheme, webpage, DNS, TLS and domain-age evidence are excluded from the trained base-domain model.",
+            "Subdomain/path-specific phishing, private-hosting pages and compromised trusted websites cannot be detected from the base domain alone.",
+            "Base-domain normalization uses last labels with common country-code handling, not a complete runtime Public Suffix List.",
+            "Historical dataset artifacts and shared URL templates can inflate evaluation even with disjoint domains.",
+            "A low score is not a guarantee; new campaigns and unusual legitimate sites can be misclassified."
+          ],
+          "metrics": {
+            "samples": 44797,
+            "positive_samples": 17821,
+            "negative_samples": 26976,
+            "accuracy_at_0_5": 0.806862,
+            "precision_at_0_5": 0.881374,
+            "recall_at_0_5": 0.594523,
+            "f1_at_0_5": 0.710073,
+            "roc_auc": 0.873144,
+            "average_precision": 0.859582,
+            "brier_score": 0.134019,
+            "confusion_matrix_at_0_5": [
+              [
+                25550,
+                1426
+              ],
+              [
+                7226,
+                10595
+              ]
+            ],
+            "majority_class_accuracy": 0.602183,
+            "operating_thresholds": {
+              "low": 0.05,
+              "high": 0.95
+            },
+            "high_risk_count": 4917,
+            "high_risk_precision": 0.997763,
+            "low_risk_count": 4159,
+            "positive_rate_among_low_risk": 0.04328,
+            "review_fraction": 0.797397
+          }
+        }
+      },
+      {
+        "input": "https://github.com/05RANDOM-pmustudent/SESSION-1-25-26-FYP",
+        "result": {
+          "score": 90,
+          "label": "review",
+          "probability": 0.897853,
+          "model": "URL base-domain logistic regression",
+          "model_version": "1.2.0",
+          "signals": [
+            "Local model assessed base-domain spelling, structure and character patterns."
+          ],
+          "limitations": [
+            "Lexical hostname patterns cannot establish whether a website is safe or compromised.",
+            "Subdomain, path, query, scheme, webpage, DNS, TLS and domain-age evidence are excluded from the trained base-domain model.",
+            "Subdomain/path-specific phishing, private-hosting pages and compromised trusted websites cannot be detected from the base domain alone.",
+            "Base-domain normalization uses last labels with common country-code handling, not a complete runtime Public Suffix List.",
+            "Historical dataset artifacts and shared URL templates can inflate evaluation even with disjoint domains.",
+            "A low score is not a guarantee; new campaigns and unusual legitimate sites can be misclassified."
+          ],
+          "metrics": {
+            "samples": 44797,
+            "positive_samples": 17821,
+            "negative_samples": 26976,
+            "accuracy_at_0_5": 0.806862,
+            "precision_at_0_5": 0.881374,
+            "recall_at_0_5": 0.594523,
+            "f1_at_0_5": 0.710073,
+            "roc_auc": 0.873144,
+            "average_precision": 0.859582,
+            "brier_score": 0.134019,
+            "confusion_matrix_at_0_5": [
+              [
+                25550,
+                1426
+              ],
+              [
+                7226,
+                10595
+              ]
+            ],
+            "majority_class_accuracy": 0.602183,
+            "operating_thresholds": {
+              "low": 0.05,
+              "high": 0.95
+            },
+            "high_risk_count": 4917,
+            "high_risk_precision": 0.997763,
+            "low_risk_count": 4159,
+            "positive_rate_among_low_risk": 0.04328,
+            "review_fraction": 0.797397
+          }
+        }
+      },
+      {
+        "input": "http://192.0.2.1/account/login?verify=12345",
+        "result": {
+          "score": 99,
+          "label": "high_risk",
+          "probability": 0.987953,
+          "model": "URL base-domain logistic regression",
+          "model_version": "1.2.0",
+          "signals": [
+            "The address uses an IP address as its host.",
+            "Local model assessed base-domain spelling, structure and character patterns."
+          ],
+          "limitations": [
+            "Lexical hostname patterns cannot establish whether a website is safe or compromised.",
+            "Subdomain, path, query, scheme, webpage, DNS, TLS and domain-age evidence are excluded from the trained base-domain model.",
+            "Subdomain/path-specific phishing, private-hosting pages and compromised trusted websites cannot be detected from the base domain alone.",
+            "Base-domain normalization uses last labels with common country-code handling, not a complete runtime Public Suffix List.",
+            "Historical dataset artifacts and shared URL templates can inflate evaluation even with disjoint domains.",
+            "A low score is not a guarantee; new campaigns and unusual legitimate sites can be misclassified."
+          ],
+          "metrics": {
+            "samples": 44797,
+            "positive_samples": 17821,
+            "negative_samples": 26976,
+            "accuracy_at_0_5": 0.806862,
+            "precision_at_0_5": 0.881374,
+            "recall_at_0_5": 0.594523,
+            "f1_at_0_5": 0.710073,
+            "roc_auc": 0.873144,
+            "average_precision": 0.859582,
+            "brier_score": 0.134019,
+            "confusion_matrix_at_0_5": [
+              [
+                25550,
+                1426
+              ],
+              [
+                7226,
+                10595
+              ]
+            ],
+            "majority_class_accuracy": 0.602183,
+            "operating_thresholds": {
+              "low": 0.05,
+              "high": 0.95
+            },
+            "high_risk_count": 4917,
+            "high_risk_precision": 0.997763,
+            "low_risk_count": 4159,
+            "positive_rate_among_low_risk": 0.04328,
+            "review_fraction": 0.797397
+          }
+        }
+      },
+      {
+        "input": "https://paypal-login-verification.example/secure/login",
+        "result": {
+          "score": 92,
+          "label": "review",
+          "probability": 0.922396,
+          "model": "URL base-domain logistic regression",
+          "model_version": "1.2.0",
+          "signals": [
+            "Local model assessed base-domain spelling, structure and character patterns."
+          ],
+          "limitations": [
+            "Lexical hostname patterns cannot establish whether a website is safe or compromised.",
+            "Subdomain, path, query, scheme, webpage, DNS, TLS and domain-age evidence are excluded from the trained base-domain model.",
+            "Subdomain/path-specific phishing, private-hosting pages and compromised trusted websites cannot be detected from the base domain alone.",
+            "Base-domain normalization uses last labels with common country-code handling, not a complete runtime Public Suffix List.",
+            "Historical dataset artifacts and shared URL templates can inflate evaluation even with disjoint domains.",
+            "A low score is not a guarantee; new campaigns and unusual legitimate sites can be misclassified."
+          ],
+          "metrics": {
+            "samples": 44797,
+            "positive_samples": 17821,
+            "negative_samples": 26976,
+            "accuracy_at_0_5": 0.806862,
+            "precision_at_0_5": 0.881374,
+            "recall_at_0_5": 0.594523,
+            "f1_at_0_5": 0.710073,
+            "roc_auc": 0.873144,
+            "average_precision": 0.859582,
+            "brier_score": 0.134019,
+            "confusion_matrix_at_0_5": [
+              [
+                25550,
+                1426
+              ],
+              [
+                7226,
+                10595
+              ]
+            ],
+            "majority_class_accuracy": 0.602183,
+            "operating_thresholds": {
+              "low": 0.05,
+              "high": 0.95
+            },
+            "high_risk_count": 4917,
+            "high_risk_precision": 0.997763,
+            "low_risk_count": 4159,
+            "positive_rate_among_low_risk": 0.04328,
+            "review_fraction": 0.797397
+          }
+        }
+      },
+      {
+        "input": "https://secure-account-verify-38271.example/verify-your-password",
+        "result": {
+          "score": 99,
+          "label": "high_risk",
+          "probability": 0.99419,
+          "model": "URL base-domain logistic regression",
+          "model_version": "1.2.0",
+          "signals": [
+            "Local model assessed base-domain spelling, structure and character patterns."
+          ],
+          "limitations": [
+            "Lexical hostname patterns cannot establish whether a website is safe or compromised.",
+            "Subdomain, path, query, scheme, webpage, DNS, TLS and domain-age evidence are excluded from the trained base-domain model.",
+            "Subdomain/path-specific phishing, private-hosting pages and compromised trusted websites cannot be detected from the base domain alone.",
+            "Base-domain normalization uses last labels with common country-code handling, not a complete runtime Public Suffix List.",
+            "Historical dataset artifacts and shared URL templates can inflate evaluation even with disjoint domains.",
+            "A low score is not a guarantee; new campaigns and unusual legitimate sites can be misclassified."
+          ],
+          "metrics": {
+            "samples": 44797,
+            "positive_samples": 17821,
+            "negative_samples": 26976,
+            "accuracy_at_0_5": 0.806862,
+            "precision_at_0_5": 0.881374,
+            "recall_at_0_5": 0.594523,
+            "f1_at_0_5": 0.710073,
+            "roc_auc": 0.873144,
+            "average_precision": 0.859582,
+            "brier_score": 0.134019,
+            "confusion_matrix_at_0_5": [
+              [
+                25550,
+                1426
+              ],
+              [
+                7226,
+                10595
+              ]
+            ],
+            "majority_class_accuracy": 0.602183,
+            "operating_thresholds": {
+              "low": 0.05,
+              "high": 0.95
+            },
+            "high_risk_count": 4917,
+            "high_risk_precision": 0.997763,
+            "low_risk_count": 4159,
+            "positive_rate_among_low_risk": 0.04328,
+            "review_fraction": 0.797397
+          }
+        }
+      }
+    ],
+    "scam": [
+      {
+        "input": "Can we meet at the library at six?",
+        "result": {
+          "score": 0,
+          "label": "low_risk",
+          "probability": 0.004146,
+          "model": "SMS spam logistic regression",
+          "model_version": "1.0.0",
+          "signals": [
+            "Spam-associated wording: 'the'.",
+            "Local model assessed similarity to labeled SMS spam."
+          ],
+          "limitations": [
+            "Trained on historical English SMS spam, which is not the same as a modern scam dataset.",
+            "Cannot reliably assess Malay or other unsupported languages, novel scams, or image-only content.",
+            "Spam-like wording can appear in legitimate offers; a low score is not a guarantee."
+          ],
+          "metrics": {
+            "samples": 765,
+            "positive_samples": 89,
+            "negative_samples": 676,
+            "accuracy_at_0_5": 0.985621,
+            "precision_at_0_5": 0.97561,
+            "recall_at_0_5": 0.898876,
+            "f1_at_0_5": 0.935673,
+            "roc_auc": 0.993534,
+            "average_precision": 0.941752,
+            "brier_score": 0.01373,
+            "confusion_matrix_at_0_5": [
+              [
+                674,
+                2
+              ],
+              [
+                9,
+                80
+              ]
+            ],
+            "majority_class_accuracy": 0.88366,
+            "operating_thresholds": {
+              "low": 0.2,
+              "high": 0.8
+            },
+            "high_risk_count": 67,
+            "high_risk_precision": 0.985075,
+            "low_risk_count": 669,
+            "positive_rate_among_low_risk": 0.007474,
+            "review_fraction": 0.037908
+          }
+        }
+      },
+      {
+        "input": "Congratulations! You won a cash prize. Call now to claim your free reward!",
+        "result": {
+          "score": 73,
+          "label": "review",
+          "probability": 0.731666,
+          "model": "SMS spam logistic regression",
+          "model_version": "1.0.0",
+          "signals": [
+            "Spam-associated wording: 'free'.",
+            "Spam-associated wording: 'call'.",
+            "Spam-associated wording: 'to'.",
+            "Local model assessed similarity to labeled SMS spam."
+          ],
+          "limitations": [
+            "Trained on historical English SMS spam, which is not the same as a modern scam dataset.",
+            "Cannot reliably assess Malay or other unsupported languages, novel scams, or image-only content.",
+            "Spam-like wording can appear in legitimate offers; a low score is not a guarantee."
+          ],
+          "metrics": {
+            "samples": 765,
+            "positive_samples": 89,
+            "negative_samples": 676,
+            "accuracy_at_0_5": 0.985621,
+            "precision_at_0_5": 0.97561,
+            "recall_at_0_5": 0.898876,
+            "f1_at_0_5": 0.935673,
+            "roc_auc": 0.993534,
+            "average_precision": 0.941752,
+            "brier_score": 0.01373,
+            "confusion_matrix_at_0_5": [
+              [
+                674,
+                2
+              ],
+              [
+                9,
+                80
+              ]
+            ],
+            "majority_class_accuracy": 0.88366,
+            "operating_thresholds": {
+              "low": 0.2,
+              "high": 0.8
+            },
+            "high_risk_count": 67,
+            "high_risk_precision": 0.985075,
+            "low_risk_count": 669,
+            "positive_rate_among_low_risk": 0.007474,
+            "review_fraction": 0.037908
+          }
+        }
+      },
+      {
+        "input": "Your account is suspended. Send your password and OTP immediately.",
+        "result": {
+          "score": 5,
+          "label": "low_risk",
+          "probability": 0.050199,
+          "model": "SMS spam logistic regression",
+          "model_version": "1.0.0",
+          "signals": [
+            "Spam-associated wording: 'your'.",
+            "Spam-associated wording: 'send'.",
+            "Spam-associated wording: 'and'.",
+            "Local model assessed similarity to labeled SMS spam."
+          ],
+          "limitations": [
+            "Trained on historical English SMS spam, which is not the same as a modern scam dataset.",
+            "Cannot reliably assess Malay or other unsupported languages, novel scams, or image-only content.",
+            "Spam-like wording can appear in legitimate offers; a low score is not a guarantee."
+          ],
+          "metrics": {
+            "samples": 765,
+            "positive_samples": 89,
+            "negative_samples": 676,
+            "accuracy_at_0_5": 0.985621,
+            "precision_at_0_5": 0.97561,
+            "recall_at_0_5": 0.898876,
+            "f1_at_0_5": 0.935673,
+            "roc_auc": 0.993534,
+            "average_precision": 0.941752,
+            "brier_score": 0.01373,
+            "confusion_matrix_at_0_5": [
+              [
+                674,
+                2
+              ],
+              [
+                9,
+                80
+              ]
+            ],
+            "majority_class_accuracy": 0.88366,
+            "operating_thresholds": {
+              "low": 0.2,
+              "high": 0.8
+            },
+            "high_risk_count": 67,
+            "high_risk_precision": 0.985075,
+            "low_risk_count": 669,
+            "positive_rate_among_low_risk": 0.007474,
+            "review_fraction": 0.037908
+          }
+        }
+      }
+    ],
+    "news": [
+      {
+        "input": "The city council approved a new bus route on Tuesday.",
+        "result": {
+          "score": 62,
+          "label": "review",
+          "probability": 0.617282,
+          "model": "LIAR language research baseline",
+          "model_version": "1.0.0",
+          "signals": [
+            "Research model compares wording with historical checked statements.",
+            "Source verification is required regardless of this score."
+          ],
+          "limitations": [
+            "Research-only language baseline, not truth verification or a political-bias classifier.",
+            "Every news result requires review: wording alone cannot prove or disprove a claim.",
+            "Historical US political statements introduce topic and population bias and do not represent general news.",
+            "Speaker and party metadata are excluded, but wording may still encode spurious political associations.",
+            "LIAR permits research purposes only; review dataset rights before any commercial deployment."
+          ],
+          "metrics": {
+            "samples": 1262,
+            "positive_samples": 551,
+            "negative_samples": 711,
+            "accuracy_at_0_5": 0.63233,
+            "precision_at_0_5": 0.603325,
+            "recall_at_0_5": 0.46098,
+            "f1_at_0_5": 0.522634,
+            "roc_auc": 0.67715,
+            "average_precision": 0.601019,
+            "brier_score": 0.22341,
+            "confusion_matrix_at_0_5": [
+              [
+                544,
+                167
+              ],
+              [
+                297,
+                254
+              ]
+            ],
+            "majority_class_accuracy": 0.563391,
+            "operating_thresholds": {
+              "low": 0.2,
+              "high": 0.8
+            },
+            "high_risk_count": 0,
+            "high_risk_precision": null,
+            "low_risk_count": 0,
+            "positive_rate_among_low_risk": null,
+            "review_fraction": 1.0
+          }
+        }
+      },
+      {
+        "input": "A new study claims this treatment cures every disease overnight.",
+        "result": {
+          "score": 54,
+          "label": "review",
+          "probability": 0.54486,
+          "model": "LIAR language research baseline",
+          "model_version": "1.0.0",
+          "signals": [
+            "Research model compares wording with historical checked statements.",
+            "Source verification is required regardless of this score."
+          ],
+          "limitations": [
+            "Research-only language baseline, not truth verification or a political-bias classifier.",
+            "Every news result requires review: wording alone cannot prove or disprove a claim.",
+            "Historical US political statements introduce topic and population bias and do not represent general news.",
+            "Speaker and party metadata are excluded, but wording may still encode spurious political associations.",
+            "LIAR permits research purposes only; review dataset rights before any commercial deployment."
+          ],
+          "metrics": {
+            "samples": 1262,
+            "positive_samples": 551,
+            "negative_samples": 711,
+            "accuracy_at_0_5": 0.63233,
+            "precision_at_0_5": 0.603325,
+            "recall_at_0_5": 0.46098,
+            "f1_at_0_5": 0.522634,
+            "roc_auc": 0.67715,
+            "average_precision": 0.601019,
+            "brier_score": 0.22341,
+            "confusion_matrix_at_0_5": [
+              [
+                544,
+                167
+              ],
+              [
+                297,
+                254
+              ]
+            ],
+            "majority_class_accuracy": 0.563391,
+            "operating_thresholds": {
+              "low": 0.2,
+              "high": 0.8
+            },
+            "high_risk_count": 0,
+            "high_risk_precision": null,
+            "low_risk_count": 0,
+            "positive_rate_among_low_risk": null,
+            "review_fraction": 1.0
+          }
+        }
+      }
+    ]
+  },
+  "runtime_inference_latency": {
+    "url": {
+      "p50_ms": 0.04,
+      "p95_ms": 0.09,
+      "measurement": "100 warm predictions of the first illustrative sample on the training machine; excludes network and queue"
+    },
+    "scam": {
+      "p50_ms": 0.045,
+      "p95_ms": 0.109,
+      "measurement": "100 warm predictions of the first illustrative sample on the training machine; excludes network and queue"
+    },
+    "news": {
+      "p50_ms": 0.025,
+      "p95_ms": 0.053,
+      "measurement": "100 warm predictions of the first illustrative sample on the training machine; excludes network and queue"
+    }
+  }
+}
